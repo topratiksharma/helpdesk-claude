@@ -8,6 +8,23 @@ We receive hundreds of support emails daily. Our agents manually read, classify,
 
 Build a ticket management system that uses AI to automatically classify, respond to, and route support tickets — delivering faster, more personalized responses to students while freeing up agents for complex issues. Also add human in loop when responding if response requires some additional information. 
 
+## Ticket Statuses
+
+- **Open** — newly created, not yet resolved
+- **Resolved** — agent has responded and marked as resolved
+- **Closed** — ticket is fully closed, no further action needed
+
+## Ticket Categories
+
+- General Questions
+- Technical Questions
+- Refund
+
+## User Roles
+
+- **Admin** — seeded on initial deployment; can create and manage agents
+- **Agent** — created by admin; can view, respond to, and manage tickets
+
 ## Features
 
 - Receive support emails and create tickets
