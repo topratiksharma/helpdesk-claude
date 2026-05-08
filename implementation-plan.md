@@ -3,11 +3,11 @@
 ## Phase 1 — Project Scaffold
 
 - Initialize monorepo with `client/` and `server/` directories
-- **Client**: React + TypeScript + React Router + Tailwind + shadcn/ui
+- **Client**: React + TypeScript + React Router  
 - **Server**: Node + TypeScript + Express, basic health-check route
 - Configure shared TypeScript settings (`tsconfig`)
 - Set up `.env` files and environment variable handling
-- Configure ESLint + Prettier for both packages
+- Setup PostgreSQL database
 
 ---
 
