@@ -2,8 +2,8 @@
   "name": "@helpdesk/server",
   "version": "1.0.0",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "start": "bun src/index.ts"
+    "dev": "~/.bun/bin/bun --watch src/index.ts",
+    "start": "~/.bun/bin/bun src/index.ts"
   },
   "dependencies": {
     "express": "^5.1.0"

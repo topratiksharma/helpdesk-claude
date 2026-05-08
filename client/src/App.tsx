@@ -1,3 +1,19 @@
+import { useEffect, useState } from 'react'
+
 export default function App() {
-  return <h1>Helpdesk</h1>
+  const [status, setStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => res.json())
+      .then((data) => setStatus(data.status))
+      .catch(() => setStatus('error'))
+  }, [])
+
+  return (
+    <div>
+      <h1>Helpdesk</h1>
+      <p>Server status: {status ?? 'loading…'}</p>
+    </div>
+  )
 }
