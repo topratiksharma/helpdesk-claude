@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "~/.bun/bin/bun --watch src/index.ts",
-    "start": "~/.bun/bin/bun src/index.ts"
+    "start": "~/.bun/bin/bun src/index.ts",
+    "db:push": "~/.bun/bin/bun run node_modules/prisma/build/index.js db push",
+    "db:generate": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
