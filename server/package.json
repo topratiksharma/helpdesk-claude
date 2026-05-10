@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "~/.bun/bin/bun --watch src/index.ts",
     "start": "~/.bun/bin/bun src/index.ts",
+    "db:migrate": "~/.bun/bin/bun run node_modules/prisma/build/index.js migrate dev",
     "db:push": "~/.bun/bin/bun run node_modules/prisma/build/index.js db push",
     "db:generate": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate"
   },

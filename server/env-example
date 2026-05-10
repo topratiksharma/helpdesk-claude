@@ -1,2 +1,2 @@
-DATABASE_URL="postgresql://admin:root@localhost:5432/helpdesk"
+DATABASE_URL="postgresql://postgres:root@localhost:5432/helpdesk"
 PORT=3000
