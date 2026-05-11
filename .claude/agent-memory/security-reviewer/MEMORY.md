@@ -1,0 +1,1 @@
+- [Auth Security Audit - Initial Findings](project_auth_security_audit.md) — soft-delete schema gap, missing admin enforcement, CORS, AdminLayout race condition, /api/me over-exposure
