@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Role } from "./generated/prisma";
 import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
 
@@ -12,8 +13,8 @@ if (!email || !password) {
 
 const existing = await prisma.user.findUnique({ where: { email } });
 if (existing) {
-  if (existing.role !== "admin") {
-    await prisma.user.update({ where: { email }, data: { role: "admin" } });
+  if (existing.role !== Role.admin) {
+    await prisma.user.update({ where: { email }, data: { role: Role.admin } });
     console.log(`Updated ${email} role to admin.`);
   } else {
     console.log(`Admin user ${email} already exists — skipping.`);
@@ -28,7 +29,7 @@ await auth.api.signUpEmail({
 
 await prisma.user.update({
   where: { email },
-  data: { role: "admin" },
+  data: { role: Role.admin },
 });
 
 console.log(`Admin user ${email} created successfully.`);

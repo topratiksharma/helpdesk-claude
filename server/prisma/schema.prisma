@@ -7,18 +7,25 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  admin
+  agent
+}
+
 model User {
-  id            String    @id
+  id            String   @id
   name          String
-  email         String    @unique
+  email         String   @unique
   emailVerified Boolean
   image         String?
-  role          String    @default("agent")
+  role          Role     @default(agent)
   createdAt     DateTime
   updatedAt     DateTime
 
   sessions Session[]
   accounts Account[]
+
+  @@map("User")
 }
 
 model Session {
@@ -31,6 +38,8 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("Session")
 }
 
 model Account {
@@ -48,6 +57,8 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+
+  @@map("Account")
 }
 
 model Verification {
@@ -57,4 +68,6 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime?
   updatedAt  DateTime?
+
+  @@map("Verification")
 }
