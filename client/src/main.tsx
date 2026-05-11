@@ -4,7 +4,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
+import UsersPage from './pages/UsersPage'
 import ProtectedLayout from './layouts/ProtectedLayout'
+import AdminLayout from './layouts/AdminLayout'
 
 const router = createBrowserRouter([
   {
@@ -14,7 +16,13 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <ProtectedLayout />,
-    children: [{ index: true, element: <HomePage /> }],
+    children: [
+      { index: true, element: <HomePage /> },
+      {
+        element: <AdminLayout />,
+        children: [{ path: 'users', element: <UsersPage /> }],
+      },
+    ],
   },
 ])
 

@@ -31,7 +31,7 @@ export default function ProtectedLayout() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <Navbar user={session.user} />
+      <Navbar user={{ name: session.user.name, email: session.user.email, role: session.user.role }} />
       <main className="max-w-[1200px] mx-auto px-6 py-10">
         <Outlet />
       </main>
