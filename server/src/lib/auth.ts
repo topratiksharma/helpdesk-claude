@@ -5,7 +5,7 @@ import { Role } from "../generated/prisma";
 
 export const auth = betterAuth({
   basePath: "/api/auth",
-  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") ?? [],
+  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ?? [],
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
