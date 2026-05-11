@@ -1,30 +1,42 @@
-import { useState, type FormEvent } from 'react'
 import { useNavigate, Navigate } from 'react-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { signIn, useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const loginSchema = z.object({
+  email: z.email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
+
 export default function LoginPage() {
   const { data: session, isPending } = useSession()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  })
 
   if (!isPending && session) {
     return <Navigate to="/" replace />
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setIsSubmitting(true)
-    const { error: authError } = await signIn.email({ email, password })
+  async function onSubmit(values: LoginFormValues) {
+    const { error: authError } = await signIn.email(values)
     if (authError) {
-      setError(authError.message ?? 'Invalid credentials. Please try again.')
-      setIsSubmitting(false)
+      setError('root', {
+        message: authError.message ?? 'Invalid credentials. Please try again.',
+      })
     } else {
       navigate('/')
     }
@@ -122,7 +134,7 @@ export default function LoginPage() {
               '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.6) inset',
           }}
         >
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <Label htmlFor="email">Email address</Label>
@@ -131,10 +143,14 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="you@company.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={!!errors.email}
+                  {...register('email')}
                 />
+                {errors.email && (
+                  <span style={{ fontSize: '12px', color: 'var(--color-error)' }}>
+                    {errors.email.message}
+                  </span>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -144,13 +160,17 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!errors.password}
+                  {...register('password')}
                 />
+                {errors.password && (
+                  <span style={{ fontSize: '12px', color: 'var(--color-error)' }}>
+                    {errors.password.message}
+                  </span>
+                )}
               </div>
 
-              {error && (
+              {errors.root && (
                 <div
                   role="alert"
                   style={{
@@ -176,7 +196,7 @@ export default function LoginPage() {
                     <path d="M7 4v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     <circle cx="7" cy="10" r="0.75" fill="currentColor" />
                   </svg>
-                  {error}
+                  {errors.root.message}
                 </div>
               )}
 
