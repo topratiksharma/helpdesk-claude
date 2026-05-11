@@ -6,7 +6,8 @@
     "start": "~/.bun/bin/bun src/index.ts",
     "db:migrate": "~/.bun/bin/bun run node_modules/prisma/build/index.js migrate dev",
     "db:push": "~/.bun/bin/bun run node_modules/prisma/build/index.js db push",
-    "db:generate": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate"
+    "db:generate": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate",
+    "db:seed": "~/.bun/bin/bun src/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
