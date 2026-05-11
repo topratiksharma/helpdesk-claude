@@ -14,7 +14,7 @@ See `project-scope.md` for full feature list and `implementation-plan.md` for th
 | Backend | Node.js + TypeScript + Express v5 |
 | Runtime / Package manager | Bun (`~/.bun/bin/bun`) |
 | Database | PostgreSQL + Prisma ORM |
-| Auth | Database sessions |
+| Auth | Better Auth (database sessions) |
 | AI | Claude API (Anthropic) |
 | Email | Postmark or SendGrid |
 | UI | Tailwind CSS + shadcn/ui |
@@ -63,10 +63,43 @@ bun run dev:client
 
 Always use **Context7** (`mcp__context7__resolve-library-id` + `mcp__context7__query-docs`) to fetch up-to-date documentation before writing code that uses any library or framework — including React, React Router, Express, Prisma, Bun, Vite, shadcn/ui, and the Anthropic SDK. Do not rely on training-data knowledge for API shapes, config formats, or CLI commands.
 
+## Authentication
+
+Powered by **Better Auth** with email/password (sign-up disabled — users are seeded/created by admin only).
+
+**Server (`server/src/lib/auth.ts`):**
+- `basePath: "/api/auth"` — all auth endpoints live under `/api/auth/*`
+- Prisma adapter backed by PostgreSQL
+- Custom user fields: `role` (`admin` | `agent`, default `agent`) and `deletedAt` (soft delete)
+- Route handler: `app.all("/api/auth/*splat", toNodeHandler(auth))` in `server/src/index.ts`
+- Trusted origins read from `TRUSTED_ORIGINS` env var (comma-separated)
+
+**Middleware (`server/src/middleware/auth.ts`):**
+- `requireAuth` — validates session via `auth.api.getSession`, attaches `req.user` and `req.session`, returns 401 if unauthenticated
+- Apply to any protected Express route: `router.get("/tickets", requireAuth, handler)`
+
+**Client (`client/src/lib/auth-client.ts`):**
+- `useSession()` — React hook, returns `{ data: session, isPending }`
+- `signIn.email({ email, password })` — returns `{ error }` on failure
+- `signOut()` — clears session
+- `ProtectedLayout` (`client/src/layouts/ProtectedLayout.tsx`) redirects unauthenticated users to `/login`
+
+## shadcn/ui
+
+Components live in `client/src/components/ui/`. Add new ones with:
+
+```bash
+cd client && bunx shadcn add <component>
+```
+
+The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadcn's default neutral palette via CSS variables (`--primary`, `--background`, `--foreground`, `--muted`, etc.). No `tailwind.config.js`. Dark mode is class-based (`.dark` on `<html>`).
+
+Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
+
 ## Key Conventions
 - Use bun as the runtime and package manager
-- Use TypeScript throughOut
-- Use context7 MCP server to fetch upto-date documentation for libraries.
+- Use TypeScript throughout
+- Use context7 MCP server to fetch up-to-date documentation for libraries.
 
 ## Implementation Phases
 
