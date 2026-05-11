@@ -7,10 +7,10 @@ export default function HomePage() {
   return (
     <div className="animate-fade-up">
       <div className="mb-8">
-        <h1 className="font-display text-[32px] font-medium text-ink tracking-[-0.02em] leading-[1.2] mb-1.5">
+        <h1 className="font-display text-[32px] font-medium text-foreground tracking-[-0.02em] leading-[1.2] mb-1.5">
           Good to see you, {firstName}.
         </h1>
-        <p className="text-sm text-ink-muted">
+        <p className="text-sm text-muted-foreground">
           Your support workspace is ready.
         </p>
       </div>
@@ -24,12 +24,12 @@ export default function HomePage() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-surface border border-border rounded-md px-6 py-5"
+            className="bg-card border border-border rounded-md px-6 py-5"
           >
-            <p className="text-xs text-ink-faint mb-1.5 uppercase tracking-[0.06em]">
+            <p className="text-xs text-muted-foreground mb-1.5 uppercase tracking-[0.06em]">
               {stat.label}
             </p>
-            <p className="text-[28px] font-display font-medium text-ink">
+            <p className="text-[28px] font-display font-medium text-foreground">
               {stat.value}
             </p>
           </div>

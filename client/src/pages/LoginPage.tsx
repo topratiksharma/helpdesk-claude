@@ -47,7 +47,7 @@ export default function LoginPage() {
       {/* Decorative background grid */}
       <div
         aria-hidden
-        className="fixed inset-0 pointer-events-none opacity-35 bg-[linear-gradient(var(--color-border)_1px,transparent_1px),linear-gradient(90deg,var(--color-border)_1px,transparent_1px)] bg-[size:48px_48px]"
+        className="fixed inset-0 pointer-events-none opacity-35 bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] bg-[size:48px_48px]"
       />
 
       <div className="w-full max-w-[420px] relative animate-fade-up">
@@ -55,7 +55,7 @@ export default function LoginPage() {
         <div className="mb-10 text-center">
           <div className="inline-flex items-center gap-2.5 mb-2">
             {/* Logo mark */}
-            <div className="w-9 h-9 rounded-[8px] bg-forest flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-[8px] bg-primary flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M3 4.5A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5v6A1.5 1.5 0 0 1 13.5 12H10l-3 3v-3H4.5A1.5 1.5 0 0 1 3 10.5v-6Z"
@@ -64,17 +64,17 @@ export default function LoginPage() {
                 />
               </svg>
             </div>
-            <span className="font-display text-2xl font-medium text-ink tracking-[-0.01em]">
+            <span className="font-display text-2xl font-medium text-foreground tracking-[-0.01em]">
               Helpdesk
             </span>
           </div>
-          <p className="text-[13px] text-ink-faint tracking-[0.03em]">
+          <p className="text-[13px] text-muted-foreground tracking-[0.03em]">
             Sign in to your workspace
           </p>
         </div>
 
         {/* Form card */}
-        <div className="bg-surface border border-border rounded-lg p-8 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(255,255,255,0.6)_inset]">
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                   {...register('email')}
                 />
                 {errors.email && (
-                  <span className="text-xs text-error">{errors.email.message}</span>
+                  <span className="text-xs text-destructive">{errors.email.message}</span>
                 )}
               </div>
 
@@ -103,14 +103,14 @@ export default function LoginPage() {
                   {...register('password')}
                 />
                 {errors.password && (
-                  <span className="text-xs text-error">{errors.password.message}</span>
+                  <span className="text-xs text-destructive">{errors.password.message}</span>
                 )}
               </div>
 
               {errors.root && (
                 <div
                   role="alert"
-                  className="bg-error-bg border border-[#F0C0C0] rounded-sm px-3.5 py-2.5 text-[13px] text-error flex items-center gap-2"
+                  className="bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive flex items-center gap-2"
                 >
                   <svg
                     width="14"
@@ -168,7 +168,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center mt-6 text-xs text-ink-faint">
+        <p className="text-center mt-6 text-xs text-muted-foreground">
           Contact your administrator for access.
         </p>
       </div>
