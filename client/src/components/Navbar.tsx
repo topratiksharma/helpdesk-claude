@@ -1,15 +1,14 @@
 import { NavLink, useNavigate } from 'react-router'
-import { signOut } from '@/lib/auth-client'
+import { signOut, useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Role } from '@/lib/constants'
 
-interface NavbarProps {
-  user: { name: string; email: string; role: string }
-}
-
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar() {
+  const { data: session } = useSession()
   const navigate = useNavigate()
+  const user = session!.user
 
   async function handleSignOut() {
     await signOut()
@@ -40,7 +39,7 @@ export default function Navbar({ user }: NavbarProps) {
             <NavLink to="/" end className={navLinkClass}>
               Dashboard
             </NavLink>
-            {user.role === 'admin' && (
+            {user.role === Role.admin && (
               <NavLink to="/users" className={navLinkClass}>
                 Users
               </NavLink>

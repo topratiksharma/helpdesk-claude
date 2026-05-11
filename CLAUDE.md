@@ -79,10 +79,17 @@ Powered by **Better Auth** with email/password (sign-up disabled — users are s
 - Apply to any protected Express route: `router.get("/tickets", requireAuth, handler)`
 
 **Client (`client/src/lib/auth-client.ts`):**
-- `useSession()` — React hook, returns `{ data: session, isPending }`
+- `useSession()` — React hook, returns `{ data: session, isPending }`; uses a shared cache so calling it in multiple components is safe
 - `signIn.email({ email, password })` — returns `{ error }` on failure
 - `signOut()` — clears session
 - `ProtectedLayout` (`client/src/layouts/ProtectedLayout.tsx`) redirects unauthenticated users to `/login`
+- `AdminLayout` (`client/src/layouts/AdminLayout.tsx`) redirects non-admins to `/`
+
+**Role enum (`client/src/lib/constants.ts`):**
+- Always use `Role.admin` / `Role.agent` — never raw strings
+
+**Creating users (sign-up is disabled at API level):**
+Hash with `hashPassword` from `better-auth/crypto`, then insert a `User` row and a linked `Account` row (`providerId: "credential"`) directly via Prisma.
 
 ## shadcn/ui
 
