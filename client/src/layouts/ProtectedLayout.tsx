@@ -7,28 +7,20 @@ export default function ProtectedLayout() {
 
   if (isPending) {
     return (
-      <div
-        style={{
-          minHeight: '100dvh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+      <div className="min-h-dvh flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3.5">
           <svg
             width="24"
             height="24"
             viewBox="0 0 24 24"
             fill="none"
-            style={{ animation: 'spin 0.8s linear infinite', color: 'var(--color-ink-faint)' }}
+            className="animate-spin text-ink-faint"
           >
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
             <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <span style={{ fontSize: '13px', color: 'var(--color-ink-faint)' }}>Loading…</span>
+          <span className="text-[13px] text-ink-faint">Loading…</span>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
@@ -38,15 +30,9 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--color-background)' }}>
+    <div className="min-h-dvh bg-background">
       <Navbar user={session.user} />
-      <main
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '40px 24px',
-        }}
-      >
+      <main className="max-w-[1200px] mx-auto px-6 py-10">
         <Outlet />
       </main>
     </div>

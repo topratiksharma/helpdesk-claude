@@ -43,55 +43,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{ minHeight: '100dvh' }}
-      className="flex items-center justify-center px-4 py-16"
-    >
+    <div className="min-h-dvh flex items-center justify-center px-4 py-16">
       {/* Decorative background grid */}
       <div
         aria-hidden
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundImage:
-            'linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-          opacity: 0.35,
-          pointerEvents: 'none',
-        }}
+        className="fixed inset-0 pointer-events-none opacity-35 bg-[linear-gradient(var(--color-border)_1px,transparent_1px),linear-gradient(90deg,var(--color-border)_1px,transparent_1px)] bg-[size:48px_48px]"
       />
 
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          position: 'relative',
-          animation: 'fadeUp 0.5s ease both',
-        }}
-      >
+      <div className="w-full max-w-[420px] relative animate-fade-up">
         {/* Brand header */}
         <div className="mb-10 text-center">
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '8px',
-            }}
-          >
+          <div className="inline-flex items-center gap-2.5 mb-2">
             {/* Logo mark */}
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: 'var(--color-forest)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
+            <div className="w-9 h-9 rounded-[8px] bg-forest flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path
                   d="M3 4.5A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5v6A1.5 1.5 0 0 1 13.5 12H10l-3 3v-3H4.5A1.5 1.5 0 0 1 3 10.5v-6Z"
@@ -100,43 +64,20 @@ export default function LoginPage() {
                 />
               </svg>
             </div>
-            <span
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '24px',
-                fontWeight: 500,
-                color: 'var(--color-ink)',
-                letterSpacing: '-0.01em',
-              }}
-            >
+            <span className="font-display text-2xl font-medium text-ink tracking-[-0.01em]">
               Helpdesk
             </span>
           </div>
-          <p
-            style={{
-              fontSize: '13px',
-              color: 'var(--color-ink-faint)',
-              letterSpacing: '0.03em',
-            }}
-          >
+          <p className="text-[13px] text-ink-faint tracking-[0.03em]">
             Sign in to your workspace
           </p>
         </div>
 
         {/* Form card */}
-        <div
-          style={{
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '32px',
-            boxShadow:
-              '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.6) inset',
-          }}
-        >
+        <div className="bg-surface border border-border rounded-lg p-8 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(255,255,255,0.6)_inset]">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email">Email address</Label>
                 <Input
                   id="email"
@@ -147,13 +88,11 @@ export default function LoginPage() {
                   {...register('email')}
                 />
                 {errors.email && (
-                  <span style={{ fontSize: '12px', color: 'var(--color-error)' }}>
-                    {errors.email.message}
-                  </span>
+                  <span className="text-xs text-error">{errors.email.message}</span>
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -164,33 +103,21 @@ export default function LoginPage() {
                   {...register('password')}
                 />
                 {errors.password && (
-                  <span style={{ fontSize: '12px', color: 'var(--color-error)' }}>
-                    {errors.password.message}
-                  </span>
+                  <span className="text-xs text-error">{errors.password.message}</span>
                 )}
               </div>
 
               {errors.root && (
                 <div
                   role="alert"
-                  style={{
-                    background: 'var(--color-error-bg)',
-                    border: '1px solid #F0C0C0',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '10px 14px',
-                    fontSize: '13px',
-                    color: 'var(--color-error)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
+                  className="bg-error-bg border border-[#F0C0C0] rounded-sm px-3.5 py-2.5 text-[13px] text-error flex items-center gap-2"
                 >
                   <svg
                     width="14"
                     height="14"
                     viewBox="0 0 14 14"
                     fill="none"
-                    style={{ flexShrink: 0 }}
+                    className="shrink-0"
                   >
                     <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
                     <path d="M7 4v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -204,24 +131,16 @@ export default function LoginPage() {
                 type="submit"
                 size="lg"
                 disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  marginTop: '4px',
-                  fontFamily: 'var(--font-sans)',
-                  fontWeight: 500,
-                  letterSpacing: '0.01em',
-                }}
+                className="w-full mt-1"
               >
                 {isSubmitting ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="flex items-center gap-2">
                     <svg
                       width="16"
                       height="16"
                       viewBox="0 0 16 16"
                       fill="none"
-                      style={{
-                        animation: 'spin 0.75s linear infinite',
-                      }}
+                      className="animate-spin"
                     >
                       <circle
                         cx="8"
@@ -249,27 +168,10 @@ export default function LoginPage() {
         </div>
 
         {/* Footer note */}
-        <p
-          style={{
-            textAlign: 'center',
-            marginTop: '24px',
-            fontSize: '12px',
-            color: 'var(--color-ink-faint)',
-          }}
-        >
+        <p className="text-center mt-6 text-xs text-ink-faint">
           Contact your administrator for access.
         </p>
       </div>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
