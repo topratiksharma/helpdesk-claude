@@ -69,6 +69,12 @@ web_modules/
 .env
 .env.*
 !.env.example
+!.env.test.example
+
+# Playwright
+playwright-report/
+test-results/
+e2e/.auth/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
