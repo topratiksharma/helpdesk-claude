@@ -1,6 +1,6 @@
 import "dotenv/config";
+import { hashPassword } from "better-auth/crypto";
 import { Role } from "./generated/prisma";
-import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
 
 const email = process.env.ADMIN_EMAIL;
@@ -23,13 +23,34 @@ if (existing) {
   process.exit(0);
 }
 
-await auth.api.signUpEmail({
-  body: { email, password, name: "Admin" },
+const hashed = await hashPassword(password);
+
+const userId = crypto.randomUUID();
+
+const now = new Date();
+
+const user = await prisma.user.create({
+  data: {
+    id: userId,
+    email,
+    name: "Admin",
+    role: Role.admin,
+    emailVerified: true,
+    createdAt: now,
+    updatedAt: now,
+  },
 });
 
-await prisma.user.update({
-  where: { email },
-  data: { role: Role.admin },
+await prisma.account.create({
+  data: {
+    id: crypto.randomUUID(),
+    userId: user.id,
+    accountId: user.id,
+    providerId: "credential",
+    password: hashed,
+    createdAt: now,
+    updatedAt: now,
+  },
 });
 
 console.log(`Admin user ${email} created successfully.`);

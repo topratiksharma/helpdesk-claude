@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "better-auth": "^1.6.10",
     "dotenv": "^17.4.2"
   }
 }
