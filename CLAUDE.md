@@ -126,6 +126,17 @@ The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadc
 
 Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
 
+## E2E Testing
+
+After completing any significant user-facing feature or flow, delegate E2E test writing to the **`playwright-e2e-writer`** agent. Do not write Playwright tests yourself — use the agent.
+
+Trigger it when:
+- A new page, form, or user flow is implemented
+- Auth or role-gating logic changes
+- The user explicitly asks for E2E tests
+
+Run tests with `bun run test:e2e` (headless) or `bun run test:e2e:ui` (interactive).
+
 ## Key Conventions
 - Use bun as the runtime and package manager
 - Use TypeScript throughout
