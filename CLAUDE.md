@@ -126,26 +126,6 @@ The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadc
 
 Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
 
-## E2E Testing (Playwright)
-
-Tests live in `e2e/`. Config is `playwright.config.ts` at root. Playwright is installed as a root devDependency.
-
-**Separate test database:** `helpdesk_test` — credentials in `.env.test` (gitignored). Copy from `.env.test.example`.
-
-**Ports (test vs dev):**
-- Server: `:3001` (test) vs `:3000` (dev)
-- Client: `:5174` (test) vs `:5173` (dev)
-
-`global-setup.ts` runs before the suite: `prisma db push --force-reset` then seed. `auth.setup.ts` logs in as admin and saves session to `e2e/.auth/admin.json`. All `chromium` project tests inherit admin auth state.
-
-```bash
-bun run test:e2e          # headless
-bun run test:e2e:ui       # interactive UI
-bun run test:e2e:report   # open last HTML report
-```
-
-Import `test` and `expect` from `e2e/fixtures.ts` in test files (not directly from `@playwright/test`).
-
 ## Key Conventions
 - Use bun as the runtime and package manager
 - Use TypeScript throughout
