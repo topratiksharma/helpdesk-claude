@@ -6,6 +6,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
 import { requireAuth } from "./middleware/auth";
+import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -20,6 +21,9 @@ app.use(
 );
 
 app.use(helmet());
+
+app.use("/api/auth", authLimiter);
+app.use("/api", apiLimiter);
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
