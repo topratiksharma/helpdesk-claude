@@ -9,9 +9,9 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: {
-    port: 5173,
+    port: Number(process.env.PORT) || 5173,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': process.env.API_URL ?? 'http://localhost:3000',
     },
   },
 })

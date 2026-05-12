@@ -26,15 +26,26 @@ helpdesk-claude/
 ├── CLAUDE.md
 ├── package.json          # Bun workspace root
 ├── tsconfig.base.json    # Shared TS config extended by client + server
+├── playwright.config.ts  # E2E test config (test server :3001, client :5174)
 ├── .env.example
+├── .env.test.example     # Copy to .env.test for E2E tests
+├── e2e/                  # Playwright tests
+│   ├── global-setup.ts   # prisma db push --force-reset + seed
+│   ├── global-teardown.ts
+│   ├── auth.setup.ts     # logs in, saves e2e/.auth/admin.json
+│   └── fixtures.ts       # base test/expect exports
 ├── client/               # React app (port 5173)
-│   ├── vite.config.ts    # Proxies /api/* → localhost:3000
+│   ├── vite.config.ts    # Proxies /api/* → API_URL env var (default :3000); port from PORT env
 │   └── src/
 │       ├── main.tsx      # createBrowserRouter + RouterProvider
 │       └── App.tsx
 └── server/               # Express app (port 3000)
     └── src/
-        └── index.ts
+        ├── index.ts
+        └── middleware/
+            ├── auth.ts        # requireAuth
+            ├── admin.ts       # requireAdmin (role check)
+            └── rateLimiter.ts # authLimiter + apiLimiter
 ```
 
 ## Running the Project
@@ -74,9 +85,19 @@ Powered by **Better Auth** with email/password (sign-up disabled — users are s
 - Route handler: `app.all("/api/auth/*splat", toNodeHandler(auth))` in `server/src/index.ts`
 - Trusted origins read from `TRUSTED_ORIGINS` env var (comma-separated)
 
-**Middleware (`server/src/middleware/auth.ts`):**
-- `requireAuth` — validates session via `auth.api.getSession`, attaches `req.user` and `req.session`, returns 401 if unauthenticated
-- Apply to any protected Express route: `router.get("/tickets", requireAuth, handler)`
+**Middleware:**
+- `server/src/middleware/auth.ts` — `requireAuth`: validates session, attaches `req.user` + `req.session`, returns 401. Use for any authenticated route.
+- `server/src/middleware/admin.ts` — `requireAdmin`: validates session AND checks `role === Role.admin`, returns 401/403. Use **instead of** `requireAuth` on admin routes — do not chain both (redundant `getSession` call).
+
+```ts
+router.get("/tickets", requireAuth, handler);  // any authenticated user
+router.get("/users",   requireAdmin, handler); // admins only
+```
+
+**Rate limiting (`server/src/middleware/rateLimiter.ts`):**
+- `authLimiter` — `/api/auth/*`, 10 failed requests per 15 min (`skipSuccessfulRequests: true`)
+- `apiLimiter` — `/api/*`, 200 requests per 15 min
+- Both applied in `server/src/index.ts` before routes; responses include `RateLimit` + `Retry-After` headers (draft-8)
 
 **Client (`client/src/lib/auth-client.ts`):**
 - `useSession()` — React hook, returns `{ data: session, isPending }`; uses a shared cache so calling it in multiple components is safe
@@ -91,6 +112,8 @@ Powered by **Better Auth** with email/password (sign-up disabled — users are s
 **Creating users (sign-up is disabled at API level):**
 Hash with `hashPassword` from `better-auth/crypto`, then insert a `User` row and a linked `Account` row (`providerId: "credential"`) directly via Prisma.
 
+**`.env` files:** `server/.env` is gitignored (never committed). Copy from `server/.env.example`. The `.gitignore` uses `.env` / `.env.*` exclusions — do **not** add `!.env` negation rules. Exception: `.env.test` is committed (contains only localhost test values, no production secrets).
+
 ## shadcn/ui
 
 Components live in `client/src/components/ui/`. Add new ones with:
@@ -102,6 +125,26 @@ cd client && bunx shadcn add <component>
 The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadcn's default neutral palette via CSS variables (`--primary`, `--background`, `--foreground`, `--muted`, etc.). No `tailwind.config.js`. Dark mode is class-based (`.dark` on `<html>`).
 
 Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
+
+## E2E Testing (Playwright)
+
+Tests live in `e2e/`. Config is `playwright.config.ts` at root. Playwright is installed as a root devDependency.
+
+**Separate test database:** `helpdesk_test` — credentials in `.env.test` (gitignored). Copy from `.env.test.example`.
+
+**Ports (test vs dev):**
+- Server: `:3001` (test) vs `:3000` (dev)
+- Client: `:5174` (test) vs `:5173` (dev)
+
+`global-setup.ts` runs before the suite: `prisma db push --force-reset` then seed. `auth.setup.ts` logs in as admin and saves session to `e2e/.auth/admin.json`. All `chromium` project tests inherit admin auth state.
+
+```bash
+bun run test:e2e          # headless
+bun run test:e2e:ui       # interactive UI
+bun run test:e2e:report   # open last HTML report
+```
+
+Import `test` and `expect` from `e2e/fixtures.ts` in test files (not directly from `@playwright/test`).
 
 ## Key Conventions
 - Use bun as the runtime and package manager
