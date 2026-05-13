@@ -198,6 +198,35 @@ All server state is managed with **TanStack Query v5** (`@tanstack/react-query`)
 
 Types, interfaces, and zod schemas for a page live in a co-located `*.types.ts` file (e.g. `UsersPage.tsx` → `users.types.ts`). Export everything from there; import into the page file.
 
+## Shared Schemas — `@helpdesk/core`
+
+Any Zod schema that is used by **both** the client and the server must live in `core/src/index.ts` and be imported from `@helpdesk/core`. Never duplicate a schema across packages.
+
+**Rules:**
+- If a schema validates a request body on the server AND drives a form on the client → put it in `core/src/index.ts`
+- If a schema is server-only (e.g. query param parsing) or client-only → keep it local
+- The `*.types.ts` file re-exports from `@helpdesk/core` and adds any React-specific types (e.g. prop interfaces) that don't belong in core
+- `core` is framework-agnostic — no React, no Express, no Prisma imports
+
+**Example (`core/src/index.ts`):**
+```ts
+export const createUserSchema = z.object({ ... })
+export type CreateUserInput = z.infer<typeof createUserSchema>
+```
+
+**Client (`users.types.ts`):**
+```ts
+export type { CreateUserInput as AddUserFormValues } from '@helpdesk/core'
+export { createUserSchema as addUserSchema } from '@helpdesk/core'
+// React-specific types stay here:
+export interface AddUserDialogProps { open: boolean; onOpenChange: (open: boolean) => void }
+```
+
+**Server (`routes/resource.ts`):**
+```ts
+import { createUserSchema } from '@helpdesk/core'
+```
+
 ## Server-side Validation
 
 All request body and param validation on the server uses **Zod**. Never trust raw `req.body` — always parse it through a schema before use.
