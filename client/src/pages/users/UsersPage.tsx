@@ -17,8 +17,7 @@ import {
 export default function UsersPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [dialogUser, setDialogUser] = useState<User | undefined | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const { data, isPending, isError } = useQuery({
@@ -62,7 +61,7 @@ export default function UsersPage() {
             Manage agents and admins who have access to this workspace.
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogUser(undefined)}>
           <UserPlus size={15} strokeWidth={1.8} />
           Add user
         </Button>
@@ -82,24 +81,15 @@ export default function UsersPage() {
         loading={isPending}
         currentUserId={session?.user.id}
         onDelete={handleDelete}
-        onEdit={setEditingUser}
+        onEdit={setDialogUser}
       />
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogUser !== null} onOpenChange={(open) => { if (!open) setDialogUser(null) }}>
         <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle>Add user</DialogTitle>
+            <DialogTitle>{dialogUser ? 'Edit user' : 'Add user'}</DialogTitle>
           </DialogHeader>
-          <UserForm key={String(dialogOpen)} onSuccess={() => setDialogOpen(false)} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editingUser !== null} onOpenChange={(open) => { if (!open) setEditingUser(null) }}>
-        <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit user</DialogTitle>
-          </DialogHeader>
-          <UserForm key={editingUser?.id} user={editingUser ?? undefined} onSuccess={() => setEditingUser(null)} />
+          <UserForm key={dialogUser?.id ?? 'new'} user={dialogUser ?? undefined} onSuccess={() => setDialogUser(null)} />
         </DialogContent>
       </Dialog>
     </div>
