@@ -10,7 +10,7 @@ See `project-scope.md` for full feature list and `implementation-plan.md` for th
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19 + TypeScript + React Router v7 + Vite |
+| Frontend | React 19 + TypeScript + React Router v7 + Vite + TanStack Query v5 |
 | Backend | Node.js + TypeScript + Express v5 |
 | Runtime / Package manager | Bun (`~/.bun/bin/bun`) |
 | Database | PostgreSQL + Prisma ORM |
@@ -37,7 +37,7 @@ helpdesk-claude/
 ├── client/               # React app (port 5173)
 │   ├── vite.config.ts    # Proxies /api/* → API_URL env var (default :3000); port from PORT env
 │   └── src/
-│       ├── main.tsx      # createBrowserRouter + RouterProvider
+│       ├── main.tsx      # createBrowserRouter + RouterProvider + QueryClientProvider
 │       └── App.tsx
 └── server/               # Express app (port 3000)
     └── src/
@@ -136,6 +136,21 @@ Trigger it when:
 - The user explicitly asks for E2E tests
 
 Run tests with `bun run test:e2e` (headless) or `bun run test:e2e:ui` (interactive).
+
+## Data Fetching
+
+All server state is managed with **TanStack Query v5** (`@tanstack/react-query`).
+
+- `QueryClient` created once at module level in `client/src/main.tsx`; app wrapped in `<QueryClientProvider>`
+- **Always use TanStack Query** for server state — no raw `useState`/`useEffect` for data loading
+- **Always use axios** (not `fetch`) for HTTP calls, with `{ withCredentials: true }` on authenticated requests
+- Fetch data with `useQuery({ queryKey: ['resource'], queryFn })` where `queryFn` calls axios
+- Mutate with `useMutation({ mutationFn, onSuccess, onError })`; call `queryClient.invalidateQueries({ queryKey: ['resource'] })` on success
+- Query keys are plain arrays: `['users']`, `['tickets']`, etc.
+
+## Page Types Convention
+
+Types, interfaces, and zod schemas for a page live in a co-located `*.types.ts` file (e.g. `UsersPage.tsx` → `users.types.ts`). Export everything from there; import into the page file.
 
 ## Key Conventions
 - Use bun as the runtime and package manager
