@@ -248,7 +248,7 @@ describe('UserForm (edit) — password validation', () => {
     renderEditForm()
     await user.type(screen.getByLabelText(/password/i), 'short')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
-    expect(await screen.findByText(/at least 8 characters with no spaces/i)).toBeInTheDocument()
+    expect(await screen.findByText(/at least 8 characters/i)).toBeInTheDocument()
   })
 
   it('shows error when password contains spaces', async () => {
@@ -256,7 +256,7 @@ describe('UserForm (edit) — password validation', () => {
     renderEditForm()
     await user.type(screen.getByLabelText(/password/i), 'has spaces here')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
-    expect(await screen.findByText(/at least 8 characters with no spaces/i)).toBeInTheDocument()
+    expect(await screen.findByText(/must not contain spaces/i)).toBeInTheDocument()
   })
 })
 

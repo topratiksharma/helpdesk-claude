@@ -15,11 +15,10 @@ export const updateUserSchema = z
   .object({
     name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100).optional(),
     email: z.email('Please enter a valid email address').optional(),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/^\S+$/, 'Password must not contain spaces')
-      .optional(),
+    password: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z.string().min(8, 'Password must be at least 8 characters').regex(/^\S+$/, 'Password must not contain spaces').optional(),
+    ),
   })
   .superRefine((data, ctx) => {
     if (!data.name && !data.email && !data.password) {

@@ -1,2 +1,2 @@
-export type { User, UserRole, CreateUserInput } from "@helpdesk/core";
-export { createUserSchema } from "@helpdesk/core";
+export type { User, UserRole, CreateUserInput, UpdateUserInput } from "@helpdesk/core";
+export { createUserSchema, updateUserSchema } from "@helpdesk/core";
