@@ -24,7 +24,9 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
 
   const { name, email, password } = result.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" } },
+  });
   if (existing) {
     res.status(409).json({ error: "A user with that email already exists." });
     return;
@@ -45,7 +47,13 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
         createdAt: now,
         updatedAt: now,
       },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
     }),
     prisma.account.create({
       data: {
