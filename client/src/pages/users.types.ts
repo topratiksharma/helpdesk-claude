@@ -11,10 +11,12 @@ export interface User {
 }
 
 export const addUserSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().trim().min(3, 'Name must be at least 3 characters'),
   email: z.email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['admin', 'agent']),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^\S+$/, 'Password must not contain spaces'),
 })
 
 export type AddUserFormValues = z.infer<typeof addUserSchema>

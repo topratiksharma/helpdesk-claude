@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { UserPlus, Trash2 } from 'lucide-react'
 import {
@@ -23,13 +23,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -45,13 +38,11 @@ function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   const {
     register,
     handleSubmit,
-    control,
     setError,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AddUserFormValues>({
     resolver: zodResolver(addUserSchema),
-    defaultValues: { role: 'agent' },
   })
 
   const createUser = useMutation({
@@ -102,6 +93,7 @@ function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                 id="add-email"
                 type="email"
                 placeholder="jane@company.com"
+                autoComplete="off"
                 aria-invalid={!!errors.email}
                 {...register('email')}
               />
@@ -116,31 +108,13 @@ function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
                 id="add-password"
                 type="password"
                 placeholder="Min. 8 characters"
+                autoComplete="new-password"
                 aria-invalid={!!errors.password}
                 {...register('password')}
               />
               {errors.password && (
                 <span className="text-xs text-destructive">{errors.password.message}</span>
               )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="add-role">Role</Label>
-              <Controller
-                name="role"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="add-role">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="agent">Agent</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
             </div>
 
             {errors.root && (

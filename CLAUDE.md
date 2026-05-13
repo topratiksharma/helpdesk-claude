@@ -182,6 +182,32 @@ All server state is managed with **TanStack Query v5** (`@tanstack/react-query`)
 
 Types, interfaces, and zod schemas for a page live in a co-located `*.types.ts` file (e.g. `UsersPage.tsx` → `users.types.ts`). Export everything from there; import into the page file.
 
+## Server-side Validation
+
+All request body and param validation on the server uses **Zod**. Never trust raw `req.body` — always parse it through a schema before use.
+
+**Pattern (`server/src/routes/users.ts` is the reference implementation):**
+
+```ts
+const createFooSchema = z.object({
+  name: z.string().min(1).max(100),
+  // ...
+});
+
+router.post("/", requireAuth, async (req, res) => {
+  const result = createFooSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.issues[0].message });
+    return;
+  }
+  const { name } = result.data; // fully typed, safe to use
+});
+```
+
+- Use `safeParse` (not `parse`) so validation errors are handled explicitly, not thrown
+- Return the first issue message as `{ error: "..." }` with a 400 status
+- Define schemas at the top of the route file, not inline
+
 ## Key Conventions
 - Use bun as the runtime and package manager
 - Use TypeScript throughout

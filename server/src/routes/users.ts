@@ -8,10 +8,12 @@ import { Role } from "../generated/prisma";
 export const usersRouter = Router();
 
 const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
+  name: z.string().trim().min(3, "Name must be at least 3 characters").max(100),
   email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["admin", "agent"]).default("agent"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/^\S+$/, "Password must not contain spaces"),
 });
 
 usersRouter.get("/", requireAdmin, async (_req, res) => {
@@ -29,7 +31,7 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
     return;
   }
 
-  const { name, email, password, role } = result.data;
+  const { name, email, password } = result.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -47,7 +49,7 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
         id: userId,
         email,
         name,
-        role: role as Role,
+        role: Role.agent,
         emailVerified: true,
         createdAt: now,
         updatedAt: now,
@@ -71,7 +73,7 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
 });
 
 usersRouter.delete("/:id", requireAdmin, async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   if (id === req.user!.id) {
     res.status(400).json({ error: "You cannot delete your own account." });

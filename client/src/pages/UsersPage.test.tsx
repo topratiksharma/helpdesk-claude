@@ -142,8 +142,44 @@ describe('UsersPage — add user dialog', () => {
     await screen.findByText('Alice Smith')
     await user.click(screen.getByRole('button', { name: /add user/i }))
     await user.click(screen.getByRole('button', { name: /create user/i }))
-    expect(await screen.findByText(/name is required/i)).toBeInTheDocument()
+    expect(await screen.findByText(/at least 3 characters/i)).toBeInTheDocument()
     expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument()
+  })
+
+  it('shows name length error when name is too short', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    await user.type(screen.getByLabelText(/^name/i), 'AB')
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /create user/i }))
+    expect(await screen.findByText(/at least 3 characters/i)).toBeInTheDocument()
+  })
+
+  it('shows name error when name is whitespace only', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    await user.type(screen.getByLabelText(/^name/i), '   ')
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /create user/i }))
+    expect(await screen.findByText(/at least 3 characters/i)).toBeInTheDocument()
+  })
+
+  it('shows password error when password contains spaces', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    await user.type(screen.getByLabelText(/^name/i), 'Test User')
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'pass word1')
+    await user.click(screen.getByRole('button', { name: /create user/i }))
+    expect(await screen.findByText(/must not contain spaces/i)).toBeInTheDocument()
   })
 
   it('shows password length error for short password', async () => {
