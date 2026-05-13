@@ -23,6 +23,7 @@ const mockUsers: User[] = [
 ]
 
 const onDelete = vi.fn()
+const onEdit = vi.fn()
 
 function renderTable(overrides: Partial<Parameters<typeof UsersTable>[0]> = {}) {
   return renderWithProviders(
@@ -31,6 +32,7 @@ function renderTable(overrides: Partial<Parameters<typeof UsersTable>[0]> = {}) 
       loading={false}
       currentUserId="other-user-id"
       onDelete={onDelete}
+      onEdit={onEdit}
       {...overrides}
     />,
   )
@@ -114,39 +116,59 @@ describe('UsersTable — loaded state', () => {
 describe('UsersTable — delete button', () => {
   it('enables delete button for users other than the current user', () => {
     renderTable({ currentUserId: 'user-1' })
-    const rows = screen.getAllByRole('row')
-    const bobRow = rows.find((r) => r.textContent?.includes('Bob Jones'))!
-    expect(bobRow.querySelector('button')).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /delete bob jones/i })).not.toBeDisabled()
   })
 
   it('disables delete button for the current user', () => {
     renderTable({ currentUserId: 'user-1' })
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    expect(aliceRow.querySelector('button')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /delete alice smith/i })).toBeDisabled()
   })
 
-  it('disables all delete buttons when currentUserId is undefined', () => {
+  it('does not disable delete buttons for other users when currentUserId is undefined', () => {
     renderTable({ currentUserId: undefined })
-    const rows = screen.getAllByRole('row').slice(1)
-    rows.forEach((row) => expect(row.querySelector('button')).not.toBeDisabled())
+    expect(screen.getByRole('button', { name: /delete alice smith/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /delete bob jones/i })).not.toBeDisabled()
   })
 
   it('calls onDelete with the correct user when delete is clicked', async () => {
     const user = userEvent.setup()
     renderTable()
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    await user.click(aliceRow.querySelector('button')!)
+    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
     expect(onDelete).toHaveBeenCalledWith(mockUsers[0])
   })
 
   it('calls onDelete with the correct user for each row', async () => {
     const user = userEvent.setup()
     renderTable()
-    const rows = screen.getAllByRole('row')
-    const bobRow = rows.find((r) => r.textContent?.includes('Bob Jones'))!
-    await user.click(bobRow.querySelector('button')!)
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
     expect(onDelete).toHaveBeenCalledWith(mockUsers[1])
+  })
+})
+
+// ─── Edit button ──────────────────────────────────────────────────────────────
+
+describe('UsersTable — edit button', () => {
+  it('enables edit button for users other than the current user', () => {
+    renderTable({ currentUserId: 'user-1' })
+    expect(screen.getByRole('button', { name: /edit bob jones/i })).not.toBeDisabled()
+  })
+
+  it('disables edit button for the current user', () => {
+    renderTable({ currentUserId: 'user-1' })
+    expect(screen.getByRole('button', { name: /edit alice smith/i })).toBeDisabled()
+  })
+
+  it('calls onEdit with the correct user when edit is clicked', async () => {
+    const user = userEvent.setup()
+    renderTable()
+    await user.click(screen.getByRole('button', { name: /edit alice smith/i }))
+    expect(onEdit).toHaveBeenCalledWith(mockUsers[0])
+  })
+
+  it('calls onEdit with the correct user for each row', async () => {
+    const user = userEvent.setup()
+    renderTable()
+    await user.click(screen.getByRole('button', { name: /edit bob jones/i }))
+    expect(onEdit).toHaveBeenCalledWith(mockUsers[1])
   })
 })

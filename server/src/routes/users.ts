@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { hashPassword } from "better-auth/crypto";
-import { createUserSchema } from "@helpdesk/core";
+import { createUserSchema, updateUserSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { requireAdmin } from "../middleware/require-admin";
 import { Role } from "../generated/prisma";
@@ -69,6 +69,61 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
   ]);
 
   res.status(201).json({ user });
+});
+
+usersRouter.patch("/:id", requireAdmin, async (req, res) => {
+  const id = req.params.id as string;
+
+  const result = updateUserSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.issues[0].message });
+    return;
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) {
+    res.status(404).json({ error: "User not found." });
+    return;
+  }
+
+  const { name, email, password } = result.data;
+
+  if (email && email.toLowerCase() !== existing.email.toLowerCase()) {
+    const conflict = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" }, NOT: { id } },
+    });
+    if (conflict) {
+      res.status(409).json({ error: "A user with that email already exists." });
+      return;
+    }
+  }
+
+  const userUpdate: Record<string, unknown> = { updatedAt: new Date() };
+  if (name !== undefined) userUpdate.name = name;
+  if (email !== undefined) userUpdate.email = email;
+
+  if (password !== undefined) {
+    const hashed = await hashPassword(password);
+    const [user] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id },
+        data: userUpdate,
+        select: { id: true, name: true, email: true, role: true, createdAt: true },
+      }),
+      prisma.account.updateMany({
+        where: { userId: id, providerId: "credential" },
+        data: { password: hashed, updatedAt: new Date() },
+      }),
+    ]);
+    res.json({ user });
+  } else {
+    const user = await prisma.user.update({
+      where: { id },
+      data: userUpdate,
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    });
+    res.json({ user });
+  }
 });
 
 usersRouter.delete("/:id", requireAdmin, async (req, res) => {

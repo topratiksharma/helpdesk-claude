@@ -10,6 +10,7 @@ vi.mock('axios', () => ({
     get: vi.fn(),
     post: vi.fn(),
     delete: vi.fn(),
+    patch: vi.fn(),
     isAxiosError: vi.fn(),
   },
 }))
@@ -278,9 +279,7 @@ describe('UsersPage — delete user', () => {
     mockedAxios.delete.mockResolvedValue({})
     renderWithProviders(<UsersPage />)
     await screen.findByText('Alice Smith')
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    await user.click(aliceRow.querySelector('button')!)
+    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
     expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Alice Smith'))
     await waitFor(() =>
       expect(mockedAxios.delete).toHaveBeenCalledWith('/api/users/user-1', expect.any(Object)),
@@ -292,9 +291,7 @@ describe('UsersPage — delete user', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderWithProviders(<UsersPage />)
     await screen.findByText('Alice Smith')
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    await user.click(aliceRow.querySelector('button')!)
+    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
     expect(mockedAxios.delete).not.toHaveBeenCalled()
   })
 
@@ -304,9 +301,7 @@ describe('UsersPage — delete user', () => {
     mockedAxios.isAxiosError.mockReturnValue(true)
     renderWithProviders(<UsersPage />)
     await screen.findByText('Alice Smith')
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    await user.click(aliceRow.querySelector('button')!)
+    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Cannot delete this user.')
   })
 })

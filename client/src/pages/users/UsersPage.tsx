@@ -18,6 +18,7 @@ export default function UsersPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const { data, isPending, isError } = useQuery({
@@ -81,6 +82,7 @@ export default function UsersPage() {
         loading={isPending}
         currentUserId={session?.user.id}
         onDelete={handleDelete}
+        onEdit={setEditingUser}
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -89,6 +91,15 @@ export default function UsersPage() {
             <DialogTitle>Add user</DialogTitle>
           </DialogHeader>
           <UserForm key={String(dialogOpen)} onSuccess={() => setDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editingUser !== null} onOpenChange={(open) => { if (!open) setEditingUser(null) }}>
+        <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+          </DialogHeader>
+          <UserForm key={editingUser?.id} user={editingUser ?? undefined} onSuccess={() => setEditingUser(null)} />
         </DialogContent>
       </Dialog>
     </div>

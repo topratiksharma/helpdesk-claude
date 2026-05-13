@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { type User } from './users.types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ interface UsersTableProps {
   loading: boolean
   currentUserId: string | undefined
   onDelete: (user: User) => void
+  onEdit: (user: User) => void
 }
 
 function formatDate(iso: string): string {
@@ -37,7 +38,7 @@ const columns = (
   </TableRow>
 )
 
-export function UsersTable({ users, loading, currentUserId, onDelete }: UsersTableProps) {
+export function UsersTable({ users, loading, currentUserId, onDelete, onEdit }: UsersTableProps) {
   if (loading) {
     return (
       <div className="bg-card border border-border rounded-md overflow-hidden">
@@ -83,15 +84,28 @@ export function UsersTable({ users, loading, currentUserId, onDelete }: UsersTab
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={user.id === currentUserId}
-                  onClick={() => onDelete(user)}
-                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
-                >
-                  <Trash2 size={14} strokeWidth={1.8} />
-                </Button>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={user.id === currentUserId}
+                    onClick={() => onEdit(user)}
+                    aria-label={`Edit ${user.name}`}
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
+                  >
+                    <Pencil size={14} strokeWidth={1.8} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={user.id === currentUserId}
+                    onClick={() => onDelete(user)}
+                    aria-label={`Delete ${user.name}`}
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                  >
+                    <Trash2 size={14} strokeWidth={1.8} />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
