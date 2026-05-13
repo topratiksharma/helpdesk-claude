@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,22 +74,17 @@ function AddUserDialog({ open, onOpenChange, onSuccess }: AddUserDialogProps) {
   })
 
   async function onSubmit(values: AddUserFormValues) {
-    const res = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(values),
-    })
-
-    if (!res.ok) {
-      const data = await res.json()
-      setError('root', { message: data.error ?? 'Failed to create user.' })
-      return
+    try {
+      await axios.post('/api/users', values, { withCredentials: true })
+      reset()
+      onSuccess()
+      onOpenChange(false)
+    } catch (err) {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.error ?? 'Failed to create user.')
+        : 'Failed to create user.'
+      setError('root', { message })
     }
-
-    reset()
-    onSuccess()
-    onOpenChange(false)
   }
 
   return (
@@ -202,9 +198,7 @@ export default function UsersPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/users', { credentials: 'include' })
-      if (!res.ok) throw new Error()
-      const data: { users: User[] } = await res.json()
+      const { data } = await axios.get<{ users: User[] }>('/api/users', { withCredentials: true })
       setUsers(data.users)
     } catch {
       setError('Could not load users. Please try again.')
@@ -217,15 +211,14 @@ export default function UsersPage() {
 
   async function handleDelete(user: User) {
     if (!window.confirm(`Delete ${user.name}? This cannot be undone.`)) return
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    if (res.ok) {
+    try {
+      await axios.delete(`/api/users/${user.id}`, { withCredentials: true })
       fetchUsers()
-    } else {
-      const data = await res.json()
-      setError(data.error ?? 'Failed to delete user.')
+    } catch (err) {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.error ?? 'Failed to delete user.')
+        : 'Failed to delete user.'
+      setError(message)
     }
   }
 
