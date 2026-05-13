@@ -14,6 +14,7 @@
       "name": "@helpdesk/client",
       "version": "1.0.0",
       "dependencies": {
+        "@helpdesk/core": "workspace:*",
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-label": "^2.1.8",
@@ -50,10 +51,18 @@
         "vitest": "^4.1.6",
       },
     },
+    "core": {
+      "name": "@helpdesk/core",
+      "version": "1.0.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+    },
     "server": {
       "name": "@helpdesk/server",
       "version": "1.0.0",
       "dependencies": {
+        "@helpdesk/core": "workspace:*",
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
         "@prisma/client-runtime-utils": "^7.8.0",
@@ -252,6 +261,8 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
     "@helpdesk/client": ["@helpdesk/client@workspace:client"],
+
+    "@helpdesk/core": ["@helpdesk/core@workspace:core"],
 
     "@helpdesk/server": ["@helpdesk/server@workspace:server"],
 
