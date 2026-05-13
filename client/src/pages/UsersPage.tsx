@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -241,11 +242,29 @@ export default function UsersPage() {
 
       {/* Loading */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="animate-spin text-muted-foreground">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
-            <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+        <div className="bg-card border border-border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs text-muted-foreground uppercase tracking-[0.06em]">Name</TableHead>
+                <TableHead className="text-xs text-muted-foreground uppercase tracking-[0.06em]">Email</TableHead>
+                <TableHead className="text-xs text-muted-foreground uppercase tracking-[0.06em]">Role</TableHead>
+                <TableHead className="text-xs text-muted-foreground uppercase tracking-[0.06em]">Date Joined</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell />
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : users.length === 0 ? (
         <div className="text-center py-16 text-sm text-muted-foreground">
