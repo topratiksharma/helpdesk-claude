@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type AddUserFormValues, type AddUserDialogProps, addUserSchema } from './users.types'
+import { type AddUserFormValues, type AddUserDialogProps, createUserSchema } from './users.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +22,7 @@ export function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AddUserFormValues>({
-    resolver: zodResolver(addUserSchema),
+    resolver: zodResolver(createUserSchema),
   })
 
   const createUser = useMutation({

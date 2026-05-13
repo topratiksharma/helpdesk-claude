@@ -217,7 +217,7 @@ export type CreateUserInput = z.infer<typeof createUserSchema>
 **Client (`users.types.ts`):**
 ```ts
 export type { CreateUserInput as AddUserFormValues } from '@helpdesk/core'
-export { createUserSchema as addUserSchema } from '@helpdesk/core'
+export { createUserSchema } from '@helpdesk/core'
 // React-specific types stay here:
 export interface AddUserDialogProps { open: boolean; onOpenChange: (open: boolean) => void }
 ```
