@@ -1,9 +1,19 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
+import { type ZodSchema } from "zod";
 import { hashPassword } from "better-auth/crypto";
 import { createUserSchema, updateUserSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { requireAdmin } from "../middleware/require-admin";
 import { Role } from "../generated/prisma";
+
+function validate<T>(schema: ZodSchema<T>, body: unknown, res: Response): T | null {
+  const result = schema.safeParse(body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.issues[0].message });
+    return null;
+  }
+  return result.data;
+}
 
 export const usersRouter = Router();
 
@@ -16,13 +26,10 @@ usersRouter.get("/", requireAdmin, async (_req, res) => {
 });
 
 usersRouter.post("/", requireAdmin, async (req, res) => {
-  const result = createUserSchema.safeParse(req.body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return;
-  }
+  const data = validate(createUserSchema, req.body, res);
+  if (!data) return;
 
-  const { name, email, password } = result.data;
+  const { name, email, password } = data;
 
   const existing = await prisma.user.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
@@ -74,11 +81,8 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
 usersRouter.patch("/:id", requireAdmin, async (req, res) => {
   const id = req.params.id as string;
 
-  const result = updateUserSchema.safeParse(req.body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return;
-  }
+  const data = validate(updateUserSchema, req.body, res);
+  if (!data) return;
 
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) {
@@ -86,7 +90,7 @@ usersRouter.patch("/:id", requireAdmin, async (req, res) => {
     return;
   }
 
-  const { name, email, password } = result.data;
+  const { name, email, password } = data;
 
   if (email && email.toLowerCase() !== existing.email.toLowerCase()) {
     const conflict = await prisma.user.findFirst({
