@@ -3,10 +3,16 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
 import { type User } from './users.types'
-import { AddUserDialog } from './AddUserDialog'
+import { UserForm } from './UserForm'
 import { UsersTable } from './UsersTable'
 import { useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export default function UsersPage() {
   const { data: session } = useSession()
@@ -77,7 +83,14 @@ export default function UsersPage() {
         onDelete={handleDelete}
       />
 
-      <AddUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add user</DialogTitle>
+          </DialogHeader>
+          <UserForm key={String(dialogOpen)} onSuccess={() => setDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

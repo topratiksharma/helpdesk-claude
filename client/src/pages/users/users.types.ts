@@ -4,8 +4,3 @@ export type {
   CreateUserInput as AddUserFormValues,
 } from "@helpdesk/core";
 export { createUserSchema } from "@helpdesk/core";
-
-export interface AddUserDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
