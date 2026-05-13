@@ -7,7 +7,7 @@ import './index.css'
 const queryClient = new QueryClient()
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
-import UsersPage from './pages/UsersPage'
+import UsersPage from './pages/users/UsersPage'
 import ProtectedLayout from './layouts/ProtectedLayout'
 import AdminLayout from './layouts/AdminLayout'
 
