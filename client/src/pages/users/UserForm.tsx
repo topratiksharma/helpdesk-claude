@@ -39,8 +39,8 @@ export function UserForm({ onSuccess }: UserFormProps) {
 
   return (
     <form onSubmit={handleSubmit((values) => createUser.mutate(values))} noValidate>
-      <div className="flex flex-col gap-4 py-2">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-3 py-1">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="add-name">Name</Label>
           <Input
             id="add-name"
@@ -48,12 +48,10 @@ export function UserForm({ onSuccess }: UserFormProps) {
             aria-invalid={!!errors.name}
             {...register('name')}
           />
-          {errors.name && (
-            <span className="text-xs text-destructive">{errors.name.message}</span>
-          )}
+          <span className="text-xs text-destructive h-3.5 block">{errors.name?.message}</span>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="add-email">Email address</Label>
           <Input
             id="add-email"
@@ -63,12 +61,10 @@ export function UserForm({ onSuccess }: UserFormProps) {
             aria-invalid={!!errors.email}
             {...register('email')}
           />
-          {errors.email && (
-            <span className="text-xs text-destructive">{errors.email.message}</span>
-          )}
+          <span className="text-xs text-destructive h-3.5 block">{errors.email?.message}</span>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="add-password">Password</Label>
           <Input
             id="add-password"
@@ -78,9 +74,7 @@ export function UserForm({ onSuccess }: UserFormProps) {
             aria-invalid={!!errors.password}
             {...register('password')}
           />
-          {errors.password && (
-            <span className="text-xs text-destructive">{errors.password.message}</span>
-          )}
+          <span className="text-xs text-destructive h-3.5 block">{errors.password?.message}</span>
         </div>
 
         {errors.root && (
@@ -92,7 +86,7 @@ export function UserForm({ onSuccess }: UserFormProps) {
           </div>
         )}
 
-        <Button type="submit" disabled={isSubmitting || createUser.isPending} className="w-full mt-1">
+        <Button type="submit" disabled={isSubmitting || createUser.isPending} className="w-full">
           {createUser.isPending ? 'Creating…' : 'Create user'}
         </Button>
       </div>
