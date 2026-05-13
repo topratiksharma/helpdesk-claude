@@ -126,6 +126,36 @@ The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadc
 
 Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
 
+## Component Testing
+
+Component tests use **Vitest** + **React Testing Library** + **@testing-library/user-event**.
+
+**Stack:**
+- Test runner: Vitest v4 (jsdom environment)
+- Assertions: `@testing-library/jest-dom` matchers (`toBeInTheDocument`, `toBeDisabled`, etc.)
+- User interactions: `userEvent.setup()` + `await user.click/type/...`
+- HTTP mocking: `vi.mock('axios')` with per-test `mockResolvedValue` / `mockRejectedValue`
+
+**File location:** co-located with the component — `UsersPage.tsx` → `UsersPage.test.tsx`.
+
+**Test utilities (`client/src/test/utils.tsx`):**
+- `renderWithProviders(ui)` — wraps with a fresh `QueryClientProvider` per test (`retry: false`); import this instead of RTL's `render`
+
+**Key rules:**
+- Always mock `axios` at the module level with `vi.mock('axios', () => ({ default: { get: vi.fn(), post: vi.fn(), delete: vi.fn(), isAxiosError: vi.fn() } }))`
+- Always mock `@/lib/auth-client` when the component calls `useSession()`
+- Use `findBy*` (async) for elements that appear after data loads; use `getBy*` for elements already in the DOM
+- Use `waitFor` when asserting that something is no longer in the DOM after an async action
+- `clearMocks: true` is set globally — reset mock implementations in `beforeEach` when needed
+
+**Scripts:**
+```bash
+bun run test           # run once (CI)
+bun run test:watch     # watch mode
+bun run test:write     # Vitest browser UI — use when writing new tests
+bun run test:unit      # run from monorepo root
+```
+
 ## E2E Testing
 
 After completing any significant user-facing feature or flow, delegate E2E test writing to the **`playwright-e2e-writer`** agent. Do not write Playwright tests yourself — use the agent.
