@@ -3,8 +3,13 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { UserPlus, Trash2 } from 'lucide-react'
+import {
+  type User,
+  type AddUserFormValues,
+  type AddUserDialogProps,
+  addUserSchema,
+} from './users.types'
 import { useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,33 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type UserRole = 'admin' | 'agent'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  createdAt: string
-}
-
 // ─── Add User dialog ──────────────────────────────────────────────────────────
-
-const addUserSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['admin', 'agent']),
-})
-
-type AddUserFormValues = z.infer<typeof addUserSchema>
-
-interface AddUserDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
 
 function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
   const queryClient = useQueryClient()
