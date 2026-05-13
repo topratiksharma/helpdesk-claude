@@ -13,11 +13,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 export default function UsersPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
   const [dialogUser, setDialogUser] = useState<User | undefined | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const { data, isPending, isError } = useQuery({
@@ -33,6 +44,7 @@ export default function UsersPage() {
       axios.delete(`/api/users/${userId}`, { withCredentials: true }),
     onSuccess: () => {
       setDeleteError(null)
+      setDeleteTarget(null)
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
     onError: (err) => {
@@ -40,13 +52,9 @@ export default function UsersPage() {
         ? (err.response?.data?.error ?? 'Failed to delete user.')
         : 'Failed to delete user.'
       setDeleteError(message)
+      setDeleteTarget(null)
     },
   })
-
-  async function handleDelete(user: User) {
-    if (!window.confirm(`Delete ${user.name}? This cannot be undone.`)) return
-    deleteUser.mutate(user.id)
-  }
 
   const error = isError ? 'Could not load users. Please try again.' : deleteError
 
@@ -80,7 +88,7 @@ export default function UsersPage() {
         users={data ?? []}
         loading={isPending}
         currentUserId={session?.user.id}
-        onDelete={handleDelete}
+        onDelete={setDeleteTarget}
         onEdit={setDialogUser}
       />
 
@@ -92,6 +100,26 @@ export default function UsersPage() {
           <UserForm key={dialogUser?.id ?? 'new'} user={dialogUser ?? undefined} onSuccess={() => setDialogUser(null)} />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the user and revoke their access. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => deleteTarget && deleteUser.mutate(deleteTarget.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

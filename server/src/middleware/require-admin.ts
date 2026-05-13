@@ -17,6 +17,11 @@ export async function requireAdmin(
     return;
   }
 
+  if (session.user.deletedAt) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
   if (session.user.role !== Role.admin) {
     res.status(403).json({ error: "Forbidden" });
     return;

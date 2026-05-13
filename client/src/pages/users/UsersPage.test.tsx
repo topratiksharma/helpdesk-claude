@@ -84,20 +84,23 @@ describe('UsersPage — loaded state', () => {
     expect(screen.getAllByText('agent')).toHaveLength(1)
   })
 
-  it('disables the delete button for the current user', async () => {
+  it('hides delete button and shows edit button for the current admin user', async () => {
     renderWithProviders(<UsersPage />)
     await screen.findByText('Me Admin')
-    const rows = screen.getAllByRole('row')
-    const myRow = rows.find((r) => r.textContent?.includes('Me Admin'))!
-    expect(myRow.querySelector('button')).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /delete me admin/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /edit me admin/i })).toBeInTheDocument()
   })
 
-  it('enables delete buttons for other users', async () => {
+  it('enables delete button for agent users', async () => {
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Bob Jones')
+    expect(screen.getByRole('button', { name: /delete bob jones/i })).not.toBeDisabled()
+  })
+
+  it('hides delete button for admin users', async () => {
     renderWithProviders(<UsersPage />)
     await screen.findByText('Alice Smith')
-    const rows = screen.getAllByRole('row')
-    const aliceRow = rows.find((r) => r.textContent?.includes('Alice Smith'))!
-    expect(aliceRow.querySelector('button')).not.toBeDisabled()
+    expect(screen.queryByRole('button', { name: /delete alice smith/i })).not.toBeInTheDocument()
   })
 })
 
@@ -271,28 +274,46 @@ describe('UsersPage — add user dialog', () => {
 describe('UsersPage — delete user', () => {
   beforeEach(() => {
     mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } })
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
-  it('calls the delete API when deletion is confirmed', async () => {
+  it('opens a confirmation dialog when delete is clicked', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Bob Jones')
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
+    expect(screen.getByText(/delete bob jones\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/revoke their access/i)).toBeInTheDocument()
+  })
+
+  it('calls the delete API when deletion is confirmed in the dialog', async () => {
     const user = userEvent.setup()
     mockedAxios.delete.mockResolvedValue({})
     renderWithProviders(<UsersPage />)
-    await screen.findByText('Alice Smith')
-    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Alice Smith'))
+    await screen.findByText('Bob Jones')
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
     await waitFor(() =>
-      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/users/user-1', expect.any(Object)),
+      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/users/user-2', expect.any(Object)),
     )
   })
 
   it('does not call the delete API when deletion is cancelled', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderWithProviders(<UsersPage />)
-    await screen.findByText('Alice Smith')
-    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
+    await screen.findByText('Bob Jones')
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
     expect(mockedAxios.delete).not.toHaveBeenCalled()
+  })
+
+  it('closes the dialog after confirming deletion', async () => {
+    const user = userEvent.setup()
+    mockedAxios.delete.mockResolvedValue({})
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Bob Jones')
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
+    await waitFor(() => expect(screen.queryByText(/delete bob jones\?/i)).not.toBeInTheDocument())
   })
 
   it('shows error banner when delete fails', async () => {
@@ -300,8 +321,9 @@ describe('UsersPage — delete user', () => {
     mockedAxios.delete.mockRejectedValue({ response: { data: { error: 'Cannot delete this user.' } } })
     mockedAxios.isAxiosError.mockReturnValue(true)
     renderWithProviders(<UsersPage />)
-    await screen.findByText('Alice Smith')
-    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
+    await screen.findByText('Bob Jones')
+    await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Cannot delete this user.')
   })
 })

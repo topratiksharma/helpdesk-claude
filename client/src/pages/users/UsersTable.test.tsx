@@ -114,30 +114,27 @@ describe('UsersTable — loaded state', () => {
 // ─── Delete button ────────────────────────────────────────────────────────────
 
 describe('UsersTable — delete button', () => {
-  it('enables delete button for users other than the current user', () => {
+  it('enables delete button for agent users who are not the current user', () => {
     renderTable({ currentUserId: 'user-1' })
     expect(screen.getByRole('button', { name: /delete bob jones/i })).not.toBeDisabled()
   })
 
   it('disables delete button for the current user', () => {
-    renderTable({ currentUserId: 'user-1' })
-    expect(screen.getByRole('button', { name: /delete alice smith/i })).toBeDisabled()
+    renderTable({ currentUserId: 'user-2' })
+    expect(screen.getByRole('button', { name: /delete bob jones/i })).toBeDisabled()
   })
 
-  it('does not disable delete buttons for other users when currentUserId is undefined', () => {
+  it('hides delete button for admin users', () => {
     renderTable({ currentUserId: undefined })
-    expect(screen.getByRole('button', { name: /delete alice smith/i })).not.toBeDisabled()
+    expect(screen.queryByRole('button', { name: /delete alice smith/i })).not.toBeInTheDocument()
+  })
+
+  it('does not disable delete button for agent users when currentUserId is undefined', () => {
+    renderTable({ currentUserId: undefined })
     expect(screen.getByRole('button', { name: /delete bob jones/i })).not.toBeDisabled()
   })
 
   it('calls onDelete with the correct user when delete is clicked', async () => {
-    const user = userEvent.setup()
-    renderTable()
-    await user.click(screen.getByRole('button', { name: /delete alice smith/i }))
-    expect(onDelete).toHaveBeenCalledWith(mockUsers[0])
-  })
-
-  it('calls onDelete with the correct user for each row', async () => {
     const user = userEvent.setup()
     renderTable()
     await user.click(screen.getByRole('button', { name: /delete bob jones/i }))
@@ -148,14 +145,10 @@ describe('UsersTable — delete button', () => {
 // ─── Edit button ──────────────────────────────────────────────────────────────
 
 describe('UsersTable — edit button', () => {
-  it('enables edit button for users other than the current user', () => {
+  it('enables edit button for all users including current user', () => {
     renderTable({ currentUserId: 'user-1' })
+    expect(screen.getByRole('button', { name: /edit alice smith/i })).not.toBeDisabled()
     expect(screen.getByRole('button', { name: /edit bob jones/i })).not.toBeDisabled()
-  })
-
-  it('disables edit button for the current user', () => {
-    renderTable({ currentUserId: 'user-1' })
-    expect(screen.getByRole('button', { name: /edit alice smith/i })).toBeDisabled()
   })
 
   it('calls onEdit with the correct user when edit is clicked', async () => {

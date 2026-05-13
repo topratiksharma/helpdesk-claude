@@ -88,23 +88,24 @@ export function UsersTable({ users, loading, currentUserId, onDelete, onEdit }: 
                   <Button
                     variant="ghost"
                     size="sm"
-                    disabled={user.id === currentUserId}
                     onClick={() => onEdit(user)}
                     aria-label={`Edit ${user.name}`}
                     className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30"
                   >
                     <Pencil size={14} strokeWidth={1.8} />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={user.id === currentUserId}
-                    onClick={() => onDelete(user)}
-                    aria-label={`Delete ${user.name}`}
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
-                  >
-                    <Trash2 size={14} strokeWidth={1.8} />
-                  </Button>
+                  {user.role !== 'admin' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={user.id === currentUserId}
+                      onClick={() => onDelete(user)}
+                      aria-label={`Delete ${user.name}`}
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                    >
+                      <Trash2 size={14} strokeWidth={1.8} />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
