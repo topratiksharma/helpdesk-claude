@@ -4,3 +4,4 @@
 - [Login page selectors](ref_login_page_selectors.md) — #email, #password, role=alert, destructive span, Sign in button
 - [Navbar selectors](ref_navbar_selectors.md) — role=link Dashboard/Users, role=button Sign out, user name text
 - [Agent user helper](ref_agent_user_helper.md) — e2e/helpers/create-user.ts, createTestUser/deleteTestUser, beforeAll/afterAll pattern
+- [Users page selectors](ref_users_page_selectors.md) — Add/Edit/Delete dialog locators, validation messages, fixture patterns for CRUD tests
