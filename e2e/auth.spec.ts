@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures";
+import { freshPage, login, logout } from "./helpers/auth";
 import { createTestUser, deleteTestUser } from "./helpers/create-user";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@example.com";
@@ -9,13 +10,6 @@ const AGENT_EMAIL = "agent@test.com";
 const AGENT_PASSWORD = "AgentPass123!";
 const AGENT_NAME = "Test Agent";
 
-// Helper: open a fresh unauthenticated page (no storageState)
-async function freshPage(browser: import("@playwright/test").Browser) {
-  const ctx = await browser.newContext({ storageState: undefined });
-  const page = await ctx.newPage();
-  return { ctx, page };
-}
-
 // ---------------------------------------------------------------------------
 // LOGIN PAGE — happy path
 // ---------------------------------------------------------------------------
@@ -24,16 +18,9 @@ test.describe("Login page — happy path", () => {
   test("admin can sign in with valid credentials and is redirected to dashboard", async ({
     browser,
   }) => {
-    const { ctx, page } = await freshPage(browser);
+    const { ctx, page } = await login(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-    await page.goto("/login");
-    await expect(page).toHaveURL("/login");
-
-    await page.locator("#email").fill(ADMIN_EMAIL);
-    await page.locator("#password").fill(ADMIN_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await page.waitForURL("/");
+    await expect(page).toHaveURL("/");
     await expect(page.getByText(ADMIN_NAME, { exact: true })).toBeVisible();
 
     await ctx.close();
@@ -42,14 +29,7 @@ test.describe("Login page — happy path", () => {
   test("navbar is visible with user name after successful sign in", async ({
     browser,
   }) => {
-    const { ctx, page } = await freshPage(browser);
-
-    await page.goto("/login");
-    await page.locator("#email").fill(ADMIN_EMAIL);
-    await page.locator("#password").fill(ADMIN_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await page.waitForURL("/");
+    const { ctx, page } = await login(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
 
     await expect(page.getByText(ADMIN_NAME, { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
@@ -73,7 +53,7 @@ test.describe("Login page — client-side validation errors", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(
-      page.getByText("Please enter a valid email address")
+      page.getByText("Please enter a valid email address"),
     ).toBeVisible();
     await expect(page.getByRole("alert")).not.toBeVisible();
 
@@ -91,7 +71,7 @@ test.describe("Login page — client-side validation errors", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(
-      page.getByText("Please enter a valid email address")
+      page.getByText("Please enter a valid email address"),
     ).toBeVisible();
 
     await ctx.close();
@@ -126,8 +106,7 @@ test.describe("Login page — server-side auth errors", () => {
     await page.locator("#password").fill("wrongpassword");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const alert = page.getByRole("alert");
-    await expect(alert).toBeVisible();
+    await expect(page.getByRole("alert")).toBeVisible();
     await expect(page).toHaveURL("/login");
 
     await ctx.close();
@@ -141,8 +120,7 @@ test.describe("Login page — server-side auth errors", () => {
     await page.locator("#password").fill("somepassword");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const alert = page.getByRole("alert");
-    await expect(alert).toBeVisible();
+    await expect(page.getByRole("alert")).toBeVisible();
     await expect(page).toHaveURL("/login");
 
     await ctx.close();
@@ -154,7 +132,6 @@ test.describe("Login page — server-side auth errors", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("Login page — already authenticated", () => {
-  // Uses the inherited admin storageState — session is already active.
   test("already-authenticated admin visiting /login is redirected to /", async ({
     page,
   }) => {
@@ -192,26 +169,16 @@ test.describe("Protected routes — unauthenticated access", () => {
 });
 
 // ---------------------------------------------------------------------------
-// SIGN OUT — use a fresh login so the shared admin session stays intact
+// SIGN OUT — fresh login each time so the shared admin session stays intact
 // ---------------------------------------------------------------------------
 
 test.describe("Sign out", () => {
-  async function loginAsAdmin(browser: import("@playwright/test").Browser) {
-    const { ctx, page } = await freshPage(browser);
-    await page.goto("/login");
-    await page.locator("#email").fill(ADMIN_EMAIL);
-    await page.locator("#password").fill(ADMIN_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForURL("/");
-    return { ctx, page };
-  }
-
   test("admin can sign out and is redirected to /login", async ({
     browser,
   }) => {
-    const { ctx, page } = await loginAsAdmin(browser);
+    const { ctx, page } = await login(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await logout(page);
     await expect(page).toHaveURL("/login");
 
     await ctx.close();
@@ -220,11 +187,9 @@ test.describe("Sign out", () => {
   test("after sign out, visiting / redirects to /login", async ({
     browser,
   }) => {
-    const { ctx, page } = await loginAsAdmin(browser);
+    const { ctx, page } = await login(browser, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page).toHaveURL("/login");
-
+    await logout(page);
     await page.goto("/");
     await expect(page).toHaveURL("/login");
 
@@ -249,9 +214,7 @@ test.describe("Admin role — navbar and route access", () => {
   }) => {
     await page.goto("/users");
     await expect(page).toHaveURL("/users");
-    await expect(
-      page.getByRole("heading", { name: "Users" })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
   });
 });
 
@@ -272,21 +235,10 @@ test.describe("Agent role — navbar and route access", () => {
     await deleteTestUser(AGENT_EMAIL);
   });
 
-  async function loginAsAgent(browser: import("@playwright/test").Browser) {
-    const ctx = await browser.newContext({ storageState: undefined });
-    const page = await ctx.newPage();
-    await page.goto("/login");
-    await page.locator("#email").fill(AGENT_EMAIL);
-    await page.locator("#password").fill(AGENT_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
-    await page.waitForURL("/");
-    return { ctx, page };
-  }
-
   test("logged-in agent does not see the Users nav link", async ({
     browser,
   }) => {
-    const { ctx, page } = await loginAsAgent(browser);
+    const { ctx, page } = await login(browser, AGENT_EMAIL, AGENT_PASSWORD);
 
     await expect(page.getByRole("link", { name: "Users" })).not.toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
@@ -297,7 +249,7 @@ test.describe("Agent role — navbar and route access", () => {
   test("logged-in agent visiting /users is redirected to /", async ({
     browser,
   }) => {
-    const { ctx, page } = await loginAsAgent(browser);
+    const { ctx, page } = await login(browser, AGENT_EMAIL, AGENT_PASSWORD);
 
     await page.goto("/users");
     await expect(page).toHaveURL("/");
@@ -322,7 +274,7 @@ test.describe("Sign-up is disabled", () => {
           password: "SomePassword123!",
           name: "New User",
         },
-      }
+      },
     );
 
     expect(response.ok()).toBe(false);
