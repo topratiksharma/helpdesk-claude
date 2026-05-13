@@ -126,6 +126,22 @@ The theme uses Tailwind v4's `@theme inline` in `client/src/index.css` — shadc
 
 Use shadcn utility classes in components: `bg-primary`, `text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-destructive`, etc.
 
+## Forms
+
+All forms use **react-hook-form** + **Zod** via `@hookform/resolvers/zod`.
+
+- Define the schema in the co-located `*.types.ts` file and export it
+- Wire it up with `useForm<FormValues>({ resolver: zodResolver(schema) })`
+- `zodResolver` runs the zod schema through react-hook-form's validation on submit and on change
+- The same zod schema should be mirrored on the server route for defence-in-depth (see Server-side Validation)
+- Display field errors from `formState.errors.<field>.message`; display API/root errors via `setError('root', { message })`
+
+```ts
+const { register, handleSubmit, setError, formState: { errors } } = useForm<MyFormValues>({
+  resolver: zodResolver(mySchema),
+})
+```
+
 ## Component Testing
 
 Component tests use **Vitest** + **React Testing Library** + **@testing-library/user-event**.
