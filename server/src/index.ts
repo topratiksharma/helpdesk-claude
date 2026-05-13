@@ -7,6 +7,7 @@ import { auth } from "./lib/auth";
 import { prisma } from "./lib/prisma";
 import { requireAuth } from "./middleware/auth";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
+import { usersRouter } from "./routes/users";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -28,6 +29,8 @@ app.use("/api", apiLimiter);
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
+
+app.use("/api/users", usersRouter);
 
 app.get("/api/me", requireAuth, (req, res) => {
   const { id, name, email, role } = req.user!;
