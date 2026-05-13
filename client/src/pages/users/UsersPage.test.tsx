@@ -226,6 +226,43 @@ describe('UsersPage — add user dialog', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Email already taken.')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
+
+  it('shows duplicate error when email exists with different casing', async () => {
+    const user = userEvent.setup()
+    mockedAxios.post.mockRejectedValue({
+      response: { data: { error: 'A user with that email already exists.' } },
+    })
+    mockedAxios.isAxiosError.mockReturnValue(true)
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    await user.type(screen.getByLabelText(/^name/i), 'New User')
+    await user.type(screen.getByLabelText(/email address/i), 'ALICE@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /create user/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/already exists/i)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('closes the dialog when the close button is clicked', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /close/i }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('closes the dialog when Escape is pressed', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<UsersPage />)
+    await screen.findByText('Alice Smith')
+    await user.click(screen.getByRole('button', { name: /add user/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
 })
 
 // ─── Delete user ──────────────────────────────────────────────────────────────
