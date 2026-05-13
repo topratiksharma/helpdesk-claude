@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -57,10 +58,10 @@ type AddUserFormValues = z.infer<typeof addUserSchema>
 interface AddUserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
 }
 
-function AddUserDialog({ open, onOpenChange, onSuccess }: AddUserDialogProps) {
+function AddUserDialog({ open, onOpenChange }: AddUserDialogProps) {
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
@@ -73,18 +74,24 @@ function AddUserDialog({ open, onOpenChange, onSuccess }: AddUserDialogProps) {
     defaultValues: { role: 'agent' },
   })
 
-  async function onSubmit(values: AddUserFormValues) {
-    try {
-      await axios.post('/api/users', values, { withCredentials: true })
+  const createUser = useMutation({
+    mutationFn: (values: AddUserFormValues) =>
+      axios.post('/api/users', values, { withCredentials: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
       reset()
-      onSuccess()
       onOpenChange(false)
-    } catch (err) {
+    },
+    onError: (err) => {
       const message = axios.isAxiosError(err)
         ? (err.response?.data?.error ?? 'Failed to create user.')
         : 'Failed to create user.'
       setError('root', { message })
-    }
+    },
+  })
+
+  function onSubmit(values: AddUserFormValues) {
+    createUser.mutate(values)
   }
 
   return (
@@ -165,8 +172,8 @@ function AddUserDialog({ open, onOpenChange, onSuccess }: AddUserDialogProps) {
               </div>
             )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full mt-1">
-              {isSubmitting ? 'Creating…' : 'Create user'}
+            <Button type="submit" disabled={isSubmitting || createUser.isPending} className="w-full mt-1">
+              {createUser.isPending ? 'Creating…' : 'Create user'}
             </Button>
           </div>
         </form>
@@ -189,38 +196,41 @@ function formatDate(iso: string): string {
 
 export default function UsersPage() {
   const { data: session } = useSession()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  async function fetchUsers() {
-    setLoading(true)
-    setError(null)
-    try {
-      const { data } = await axios.get<{ users: User[] }>('/api/users', { withCredentials: true })
-      setUsers(data.users)
-    } catch {
-      setError('Could not load users. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['users'],
+    queryFn: () =>
+      axios
+        .get<{ users: User[] }>('/api/users', { withCredentials: true })
+        .then((res) => res.data.users),
+  })
 
-  useEffect(() => { fetchUsers() }, [])
-
-  async function handleDelete(user: User) {
-    if (!window.confirm(`Delete ${user.name}? This cannot be undone.`)) return
-    try {
-      await axios.delete(`/api/users/${user.id}`, { withCredentials: true })
-      fetchUsers()
-    } catch (err) {
+  const deleteUser = useMutation({
+    mutationFn: (userId: string) =>
+      axios.delete(`/api/users/${userId}`, { withCredentials: true }),
+    onSuccess: () => {
+      setDeleteError(null)
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+    onError: (err) => {
       const message = axios.isAxiosError(err)
         ? (err.response?.data?.error ?? 'Failed to delete user.')
         : 'Failed to delete user.'
-      setError(message)
-    }
+      setDeleteError(message)
+    },
+  })
+
+  async function handleDelete(user: User) {
+    if (!window.confirm(`Delete ${user.name}? This cannot be undone.`)) return
+    deleteUser.mutate(user.id)
   }
+
+  const users = data ?? []
+  const loading = isPending
+  const error = isError ? 'Could not load users. Please try again.' : deleteError
 
   return (
     <div className="animate-fade-up">
@@ -306,7 +316,6 @@ export default function UsersPage() {
       <AddUserDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={fetchUsers}
       />
     </div>
   )
