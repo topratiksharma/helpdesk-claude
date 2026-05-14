@@ -8,6 +8,8 @@ import { prisma } from "./lib/prisma";
 import { requireAuth } from "./middleware/auth";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 import { usersRouter } from "./routes/users";
+import { ticketsRouter } from "./routes/tickets";
+import { inboundEmailRouter } from "./webhooks/inbound-email";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -31,6 +33,8 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/api/users", usersRouter);
+app.use("/api/tickets", ticketsRouter);
+app.use("/webhooks/inbound-email", inboundEmailRouter);
 
 app.get("/api/me", requireAuth, (req, res) => {
   const { id, name, email, role } = req.user!;

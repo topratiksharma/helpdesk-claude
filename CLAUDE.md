@@ -200,15 +200,28 @@ Types, interfaces, and zod schemas for a page live in a co-located `*.types.ts` 
 
 ## Shared Schemas — `@helpdesk/core`
 
-Any Zod schema that is used by **both** the client and the server must live in `core/src/index.ts` and be imported from `@helpdesk/core`. Never duplicate a schema across packages.
+Any Zod schema that is used by **both** the client and the server must live under `core/src/schemas/` and be imported from `@helpdesk/core`. Never duplicate a schema across packages.
+
+**File structure:**
+```
+core/src/
+├── index.ts          # barrel — re-exports everything: export * from './schemas/users' etc.
+└── schemas/
+    ├── users.ts      # user schemas, types, interfaces
+    ├── tickets.ts    # ticket schemas, types, interfaces
+    ├── email.ts      # email schemas, types
+    └── <domain>.ts   # one file per domain — add new schemas here, not in index.ts
+```
 
 **Rules:**
-- If a schema validates a request body on the server AND drives a form on the client → put it in `core/src/index.ts`
+- Each new domain gets its own file under `core/src/schemas/`
+- Add a re-export line in `core/src/index.ts`: `export * from './schemas/<domain>'`
+- If a schema validates a request body on the server AND drives a form on the client → put it in the appropriate schema file
 - If a schema is server-only (e.g. query param parsing) or client-only → keep it local
 - The `*.types.ts` file re-exports from `@helpdesk/core` and adds any React-specific types (e.g. prop interfaces) that don't belong in core
 - `core` is framework-agnostic — no React, no Express, no Prisma imports
 
-**Example (`core/src/index.ts`):**
+**Example (`core/src/schemas/users.ts`):**
 ```ts
 export const createUserSchema = z.object({ ... })
 export type CreateUserInput = z.infer<typeof createUserSchema>
@@ -257,6 +270,15 @@ router.post("/", requireAuth, async (req, res) => {
 - Use bun as the runtime and package manager
 - Use TypeScript throughout
 - Use context7 MCP server to fetch up-to-date documentation for libraries.
+
+## Working Style
+
+Always enter **plan mode** before starting any new implementation. Use plan mode to:
+1. Explore the relevant codebase with Explore agents
+2. Ask clarifying questions before writing any code
+3. Write a plan and get explicit approval before implementing
+
+Do not skip plan mode even for seemingly simple tasks.
 
 ## Implementation Phases
 

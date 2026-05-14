@@ -12,6 +12,23 @@ enum Role {
   agent
 }
 
+enum TicketStatus {
+  open
+  resolved
+  closed
+}
+
+enum TicketCategory {
+  general_questions
+  technical_questions
+  refund
+}
+
+enum MessageSender {
+  customer
+  agent
+}
+
 model User {
   id            String   @id
   name          String
@@ -23,10 +40,44 @@ model User {
   createdAt     DateTime
   updatedAt     DateTime
 
-  sessions Session[]
-  accounts Account[]
+  sessions         Session[]
+  accounts         Account[]
+  assignedTickets  Ticket[]  @relation("AssignedTickets")
+  authoredMessages Message[] @relation("AuthoredMessages")
 
   @@map("User")
+}
+
+model Ticket {
+  id                 Int            @id @default(autoincrement())
+  subject            String
+  fromEmail          String
+  fromName           String
+  status             TicketStatus   @default(open)
+  category           TicketCategory?
+  assignedToId       String?
+  assignedTo         User?          @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  lastInboundEmailId String?
+  messages           Message[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@map("Ticket")
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  ticketId       Int
+  ticket         Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body           String
+  htmlBody       String?
+  sender         MessageSender
+  authorId       String?
+  author         User?         @relation("AuthoredMessages", fields: [authorId], references: [id])
+  emailMessageId String?
+  createdAt      DateTime      @default(now())
+
+  @@map("Message")
 }
 
 model Session {
