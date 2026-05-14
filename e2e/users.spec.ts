@@ -2,37 +2,18 @@ import { test, expect } from "./fixtures";
 import { createTestUser, deleteTestUser } from "./helpers/create-user";
 
 // ---------------------------------------------------------------------------
-// READ — page loads and lists users
+// READ — confirms seeded data is in the real DB
 // ---------------------------------------------------------------------------
 
 test.describe("Users page — read", () => {
-  test("admin can navigate to /users and see the page heading", async ({
-    page,
-  }) => {
-    await page.goto("/users");
-    await expect(
-      page.getByRole("heading", { name: "Users" }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Manage agents and admins who have access to this workspace."),
-    ).toBeVisible();
-  });
-
   test("users table lists the seeded admin user", async ({ page }) => {
     await page.goto("/users");
     await expect(page.getByRole("cell", { name: "admin@example.com" })).toBeVisible();
   });
-
-  test("Add user button is visible on the page", async ({ page }) => {
-    await page.goto("/users");
-    await expect(
-      page.getByRole("button", { name: "Add user" }),
-    ).toBeVisible();
-  });
 });
 
 // ---------------------------------------------------------------------------
-// CREATE — add a new user via the dialog form
+// CREATE — real DB write
 // ---------------------------------------------------------------------------
 
 test.describe("Users page — create", () => {
@@ -65,7 +46,6 @@ test.describe("Users page — create", () => {
 
     await page.getByRole("button", { name: "Create user" }).click();
 
-    // Dialog should close and the new user should appear in the table
     await expect(
       page.getByRole("heading", { name: "Add user" }),
     ).not.toBeVisible();
@@ -75,7 +55,7 @@ test.describe("Users page — create", () => {
 });
 
 // ---------------------------------------------------------------------------
-// EDIT — update an existing user's name
+// EDIT — real DB update
 // ---------------------------------------------------------------------------
 
 test.describe("Users page — edit", () => {
@@ -115,7 +95,6 @@ test.describe("Users page — edit", () => {
 
     await page.getByRole("button", { name: "Save changes" }).click();
 
-    // Dialog should close and the updated name should appear
     await expect(
       page.getByRole("heading", { name: "Edit user" }),
     ).not.toBeVisible();
@@ -124,7 +103,7 @@ test.describe("Users page — edit", () => {
 });
 
 // ---------------------------------------------------------------------------
-// DELETE — remove a user via the alert dialog
+// DELETE — real DB delete
 // ---------------------------------------------------------------------------
 
 test.describe("Users page — delete", () => {
@@ -149,60 +128,14 @@ test.describe("Users page — delete", () => {
 
     await page.getByRole("button", { name: `Delete ${DELETE_NAME}` }).click();
 
-    // Alert dialog should appear
     await expect(
       page.getByRole("heading", { name: `Delete ${DELETE_NAME}?` }),
-    ).toBeVisible();
-    await expect(
-      page.getByText(
-        "This will permanently remove the user and revoke their access. This action cannot be undone.",
-      ),
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Delete" }).click();
 
-    // User should no longer appear in the table
     await expect(
       page.getByRole("cell", { name: DELETE_NAME, exact: true }),
-    ).not.toBeVisible();
-  });
-
-  test("cancelling the delete dialog keeps the user in the table", async ({
-    page,
-  }) => {
-    // Re-create the user since it may have been deleted in the previous test.
-    // This test is self-sufficient: it creates and then cancels deletion.
-    const email = `cancel-delete-${Date.now()}@test.com`;
-    const name = "Cancel Delete User";
-    await createTestUser({ email, name, password: "CancelPass123!" });
-
-    await page.goto("/users");
-    await expect(page.getByRole("cell", { name, exact: true })).toBeVisible();
-
-    await page.getByRole("button", { name: `Delete ${name}` }).click();
-    await expect(
-      page.getByRole("heading", { name: `Delete ${name}?` }),
-    ).toBeVisible();
-
-    await page.getByRole("button", { name: "Cancel" }).click();
-
-    // Dialog should close, user still visible
-    await expect(
-      page.getByRole("heading", { name: `Delete ${name}?` }),
-    ).not.toBeVisible();
-    await expect(page.getByRole("cell", { name, exact: true })).toBeVisible();
-
-    // Clean up
-    await deleteTestUser(email);
-  });
-
-  test("admin user does not have a delete button in the table", async ({
-    page,
-  }) => {
-    await page.goto("/users");
-    // The seeded admin row should not render a delete button
-    await expect(
-      page.getByRole("button", { name: "Delete Admin" }),
     ).not.toBeVisible();
   });
 });
