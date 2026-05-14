@@ -244,27 +244,21 @@ import { createUserSchema } from '@helpdesk/core'
 
 All request body and param validation on the server uses **Zod**. Never trust raw `req.body` — always parse it through a schema before use.
 
-**Pattern (`server/src/routes/users.ts` is the reference implementation):**
+Always use the shared `validate` helper from `server/src/lib/validate.ts` — never inline `safeParse` + error handling in route files.
 
 ```ts
-const createFooSchema = z.object({
-  name: z.string().min(1).max(100),
-  // ...
-});
+import { validate } from "../lib/validate";
 
 router.post("/", requireAuth, async (req, res) => {
-  const result = createFooSchema.safeParse(req.body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return;
-  }
-  const { name } = result.data; // fully typed, safe to use
+  const data = validate(createFooSchema, req.body, res);
+  if (!data) return; // validate() already sent the 400
+  const { name } = data; // fully typed, safe to use
 });
 ```
 
-- Use `safeParse` (not `parse`) so validation errors are handled explicitly, not thrown
-- Return the first issue message as `{ error: "..." }` with a 400 status
-- Define schemas at the top of the route file, not inline
+- `validate` calls `safeParse`, returns `null` and sends `{ error: "..." }` with 400 on failure
+- Use `validate` for both `req.body` and `req.query` parsing
+- Define schemas at the top of the route file (or in `@helpdesk/core` if shared), not inline
 
 ## Key Conventions
 - Use bun as the runtime and package manager
