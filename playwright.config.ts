@@ -46,6 +46,7 @@ export default defineConfig({
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET!,
         BETTER_AUTH_URL: `http://localhost:${SERVER_PORT}`,
         TRUSTED_ORIGINS: `http://localhost:${CLIENT_PORT}`,
+        INBOUND_WEBHOOK_TOKEN: process.env.INBOUND_WEBHOOK_TOKEN!,
       },
     },
     {
