@@ -14,3 +14,11 @@ export interface TicketsResponse {
   page: number
   limit: number
 }
+
+export type TicketSortField = 'id' | 'subject' | 'fromName' | 'status' | 'updatedAt'
+export type SortOrder = 'asc' | 'desc'
+
+export interface TicketSortState {
+  field: TicketSortField
+  order: SortOrder
+}

@@ -48,7 +48,13 @@ const mockTickets: TicketListItem[] = [
 
 function renderTable(overrides: Partial<Parameters<typeof TicketsTable>[0]> = {}) {
   return renderWithProviders(
-    <TicketsTable tickets={mockTickets} loading={false} {...overrides} />,
+    <TicketsTable
+      tickets={mockTickets}
+      loading={false}
+      sorting={[]}
+      onSortingChange={() => {}}
+      {...overrides}
+    />,
   )
 }
 

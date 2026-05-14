@@ -1,14 +1,24 @@
 import axios from 'axios'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { type TicketsResponse } from './tickets.types'
+import { type SortingState } from '@tanstack/react-table'
+import { type TicketsResponse, type TicketSortField, type SortOrder } from './tickets.types'
 import { TicketsTable } from './TicketsTable'
 
 export default function TicketsPage() {
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'updatedAt', desc: true }])
+
+  const sortBy = (sorting[0]?.id ?? 'updatedAt') as TicketSortField
+  const sortOrder: SortOrder = sorting[0]?.desc === false ? 'asc' : 'desc'
+
   const { data, isPending, isError } = useQuery({
-    queryKey: ['tickets'],
+    queryKey: ['tickets', sortBy, sortOrder],
     queryFn: () =>
       axios
-        .get<TicketsResponse>('/api/tickets', { withCredentials: true })
+        .get<TicketsResponse>('/api/tickets', {
+          params: { sortBy, sortOrder },
+          withCredentials: true,
+        })
         .then((res) => res.data),
   })
 
@@ -34,7 +44,12 @@ export default function TicketsPage() {
         </div>
       )}
 
-      <TicketsTable tickets={data?.tickets ?? []} loading={isPending} />
+      <TicketsTable
+        tickets={data?.tickets ?? []}
+        loading={isPending}
+        sorting={sorting}
+        onSortingChange={setSorting}
+      />
     </div>
   )
 }
