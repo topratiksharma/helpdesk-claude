@@ -1,19 +1,10 @@
-import { Router, type Response } from "express";
-import { type ZodSchema } from "zod";
+import { Router } from "express";
 import { hashPassword } from "better-auth/crypto";
 import { createUserSchema, updateUserSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
+import { validate } from "../lib/validate";
 import { requireAdmin } from "../middleware/require-admin";
 import { Role } from "../generated/prisma";
-
-function validate<T>(schema: ZodSchema<T>, body: unknown, res: Response): T | null {
-  const result = schema.safeParse(body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return null;
-  }
-  return result.data;
-}
 
 export const usersRouter = Router();
 

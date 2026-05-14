@@ -1,19 +1,11 @@
-import { Router, type Response } from "express";
-import { z, type ZodSchema } from "zod";
+import { Router } from "express";
+import { z } from "zod";
 import { createTicketSchema, updateTicketSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
+import { validate } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender } from "../generated/prisma";
-
-function validate<T>(schema: ZodSchema<T>, body: unknown, res: Response): T | null {
-  const result = schema.safeParse(body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return null;
-  }
-  return result.data;
-}
 
 const listTicketsQuerySchema = z.object({
   status: z.enum(["open", "resolved", "closed"]).optional(),

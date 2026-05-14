@@ -34,7 +34,7 @@ app.use(express.json());
 
 app.use("/api/users", usersRouter);
 app.use("/api/tickets", ticketsRouter);
-app.use("/webhooks/inbound-email", inboundEmailRouter);
+app.use("/api/webhooks/inbound-email", inboundEmailRouter);
 
 app.get("/api/me", requireAuth, (req, res) => {
   const { id, name, email, role } = req.user!;
