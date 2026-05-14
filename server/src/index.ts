@@ -9,6 +9,7 @@ import { requireAuth } from "./middleware/auth";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 import { usersRouter } from "./routes/users";
 import { ticketsRouter } from "./routes/tickets";
+import { statsRouter } from "./routes/stats";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(express.json());
 
 app.use("/api/users", usersRouter);
 app.use("/api/tickets", ticketsRouter);
+app.use("/api/stats", statsRouter);
 app.use("/api/webhooks/inbound-email", inboundEmailRouter);
 
 app.get("/api/me", requireAuth, (req, res) => {

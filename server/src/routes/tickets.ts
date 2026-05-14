@@ -7,12 +7,17 @@ import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender } from "../generated/prisma";
 
+const SORTABLE_FIELDS = ["id", "subject", "fromName", "status", "updatedAt"] as const;
+type SortField = typeof SORTABLE_FIELDS[number];
+
 const listTicketsQuerySchema = z.object({
   status: z.enum(["open", "resolved", "closed"]).optional(),
   category: z.enum(["general_questions", "technical_questions", "refund"]).optional(),
   assignedToId: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
+  sortBy: z.enum(SORTABLE_FIELDS).default("updatedAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export const ticketsRouter = Router();
@@ -24,7 +29,7 @@ ticketsRouter.get("/", requireAuth, async (req, res) => {
     return;
   }
 
-  const { status, category, assignedToId, page, limit } = query.data;
+  const { status, category, assignedToId, page, limit, sortBy, sortOrder } = query.data;
   const where = {
     ...(status !== undefined && { status }),
     ...(category !== undefined && { category }),
@@ -38,7 +43,7 @@ ticketsRouter.get("/", requireAuth, async (req, res) => {
         assignedTo: { select: { id: true, name: true, email: true } },
         _count: { select: { messages: true } },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { [sortBy as SortField]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
     }),
