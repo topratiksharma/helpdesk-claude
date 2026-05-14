@@ -12,7 +12,7 @@ export const CATEGORY_LABELS: Record<TicketCategory, string> = {
 }
 
 export const STATUS_STYLES: Record<TicketStatus, string> = {
-  open: 'bg-amber-100 text-amber-700 border-amber-200',
-  resolved: 'bg-green-100 text-green-700 border-green-200',
-  closed: 'bg-muted text-muted-foreground border-border',
+  open: 'bg-amber-50 text-amber-700 border-amber-300 font-medium',
+  resolved: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-medium',
+  closed: 'bg-slate-100 text-slate-500 border-slate-200',
 }

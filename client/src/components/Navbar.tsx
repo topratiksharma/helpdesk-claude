@@ -78,7 +78,7 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
   return cn(
     'px-3 py-1.5 rounded-md text-sm transition-colors',
     isActive
-      ? 'bg-accent text-foreground font-medium'
-      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+      ? 'bg-accent text-accent-foreground font-medium'
+      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
   )
 }
