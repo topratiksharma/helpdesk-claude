@@ -98,14 +98,6 @@ const columns: ColumnDef<TicketListItem>[] = [
     },
   },
   {
-    id: 'messages',
-    header: 'Messages',
-    enableSorting: false,
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">{row.original._count.messages}</span>
-    ),
-  },
-  {
     accessorKey: 'updatedAt',
     header: 'Updated',
     enableSorting: true,
@@ -137,12 +129,11 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
             key={header.id}
             className={cn(
               'text-xs text-muted-foreground uppercase tracking-[0.06em]',
-              header.id === 'messages' && 'text-right',
               canSort && 'cursor-pointer select-none hover:text-foreground',
             )}
             onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
           >
-            <div className={cn('flex items-center gap-1', header.id === 'messages' && 'justify-end')}>
+            <div className="flex items-center gap-1">
               {flexRender(header.column.columnDef.header, header.getContext())}
               {canSort && <SortIcon sorted={sorted} />}
             </div>
@@ -165,7 +156,6 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
                 <TableCell><Skeleton className="h-4 w-36" /></TableCell>
                 <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
               </TableRow>
             ))}
@@ -191,10 +181,7 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
           {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  className={cn(cell.column.id === 'messages' && 'text-right')}
-                >
+                <TableCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
