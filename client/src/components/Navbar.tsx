@@ -39,6 +39,9 @@ export default function Navbar() {
             <NavLink to="/" end className={navLinkClass}>
               Dashboard
             </NavLink>
+            <NavLink to="/tickets" className={navLinkClass}>
+              Tickets
+            </NavLink>
             {user.role === Role.admin && (
               <NavLink to="/users" className={navLinkClass}>
                 Users

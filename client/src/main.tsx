@@ -8,6 +8,7 @@ const queryClient = new QueryClient()
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import UsersPage from './pages/users/UsersPage'
+import TicketsPage from './pages/tickets/TicketsPage'
 import ProtectedLayout from './layouts/ProtectedLayout'
 import AdminLayout from './layouts/AdminLayout'
 
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
     element: <ProtectedLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'tickets', element: <TicketsPage /> },
       {
         element: <AdminLayout />,
         children: [{ path: 'users', element: <UsersPage /> }],

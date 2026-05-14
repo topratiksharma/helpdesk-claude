@@ -174,12 +174,19 @@ bun run test:unit      # run from monorepo root
 
 ## E2E Testing
 
-After completing any significant user-facing feature or flow, delegate E2E test writing to the **`playwright-e2e-writer`** agent. Do not write Playwright tests yourself — use the agent.
+**Default to component tests.** Write E2E tests only when the behavior cannot be covered by a component test — i.e., when the test requires a real database, real auth session, or end-to-end integration across multiple services.
 
-Trigger it when:
-- A new page, form, or user flow is implemented
-- Auth or role-gating logic changes
-- The user explicitly asks for E2E tests
+**Use E2E for:**
+- API-level integration (real DB writes, threading, idempotency, auth middleware)
+- Auth flows (login/logout, session persistence, role-gating redirects)
+- Flows that span multiple pages or require browser state (e.g. create a user then verify it appears in the table)
+
+**Do NOT use E2E for:**
+- Rendering logic, loading/empty/error states — use component tests
+- Form validation — use component tests
+- Any behavior that can be fully covered by mocking axios
+
+When E2E tests are warranted, delegate writing to the **`playwright-e2e-writer`** agent. Do not write Playwright tests yourself — use the agent.
 
 Run tests with `bun run test:e2e` (headless) or `bun run test:e2e:ui` (interactive).
 
