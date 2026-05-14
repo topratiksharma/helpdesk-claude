@@ -1,5 +1,5 @@
-import { test, expect } from "./fixtures";
-import { login, logout } from "./helpers/auth";
+import { test, expect } from "../fixtures";
+import { login, logout } from "../helpers/auth";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@example.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "test-admin-pw-123";

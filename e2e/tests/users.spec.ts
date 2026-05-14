@@ -1,5 +1,5 @@
-import { test, expect } from "./fixtures";
-import { createTestUser, deleteTestUser } from "./helpers/create-user";
+import { test, expect } from "../fixtures";
+import { createTestUser, deleteTestUser } from "../helpers/create-user";
 
 // ---------------------------------------------------------------------------
 // READ — confirms seeded data is in the real DB
@@ -8,7 +8,9 @@ import { createTestUser, deleteTestUser } from "./helpers/create-user";
 test.describe("Users page — read", () => {
   test("users table lists the seeded admin user", async ({ page }) => {
     await page.goto("/users");
-    await expect(page.getByRole("cell", { name: "admin@example.com" })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: "admin@example.com" }),
+    ).toBeVisible();
   });
 });
 
@@ -36,9 +38,7 @@ test.describe("Users page — create", () => {
 
     await page.getByRole("button", { name: "Add user" }).click();
 
-    await expect(
-      page.getByRole("heading", { name: "Add user" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Add user" })).toBeVisible();
 
     await page.locator("#user-name").fill(agentName);
     await page.locator("#user-email").fill(createdEmail);
@@ -49,8 +49,12 @@ test.describe("Users page — create", () => {
     await expect(
       page.getByRole("heading", { name: "Add user" }),
     ).not.toBeVisible();
-    await expect(page.getByRole("cell", { name: agentName, exact: true })).toBeVisible();
-    await expect(page.getByRole("cell", { name: createdEmail, exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: agentName, exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: createdEmail, exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -81,7 +85,9 @@ test.describe("Users page — edit", () => {
   }) => {
     await page.goto("/users");
 
-    await expect(page.getByRole("cell", { name: ORIGINAL_NAME, exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: ORIGINAL_NAME, exact: true }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: `Edit ${ORIGINAL_NAME}` }).click();
 
@@ -98,7 +104,9 @@ test.describe("Users page — edit", () => {
     await expect(
       page.getByRole("heading", { name: "Edit user" }),
     ).not.toBeVisible();
-    await expect(page.getByRole("cell", { name: UPDATED_NAME, exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: UPDATED_NAME, exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -124,7 +132,9 @@ test.describe("Users page — delete", () => {
   }) => {
     await page.goto("/users");
 
-    await expect(page.getByRole("cell", { name: DELETE_NAME, exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: DELETE_NAME, exact: true }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: `Delete ${DELETE_NAME}` }).click();
 

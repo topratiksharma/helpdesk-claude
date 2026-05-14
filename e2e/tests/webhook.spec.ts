@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect } from "../fixtures";
 
 const API = process.env.SERVER_URL!;
 const WEBHOOK_URL = `${API}/api/webhooks/inbound-email`;
@@ -136,11 +136,15 @@ test.describe("Inbound email webhook — idempotency", () => {
     const payload = basePayload({ subject: "Idempotency test" });
 
     // First POST
-    const first = await request.post(webhookUrl(VALID_TOKEN), { data: payload });
+    const first = await request.post(webhookUrl(VALID_TOKEN), {
+      data: payload,
+    });
     expect(first.status()).toBe(200);
 
     // Second POST with identical payload (same messageId)
-    const second = await request.post(webhookUrl(VALID_TOKEN), { data: payload });
+    const second = await request.post(webhookUrl(VALID_TOKEN), {
+      data: payload,
+    });
     expect(second.status()).toBe(200);
     expect(await second.json()).toEqual({ ok: true });
 
