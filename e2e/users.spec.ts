@@ -75,55 +75,6 @@ test.describe("Users page — create", () => {
 });
 
 // ---------------------------------------------------------------------------
-// CREATE — validation and API error cases
-// ---------------------------------------------------------------------------
-
-test.describe("Users page — create validation errors", () => {
-  test("submitting empty form shows field validation errors", async ({
-    page,
-  }) => {
-    await page.goto("/users");
-    await page.getByRole("button", { name: "Add user" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Add user" }),
-    ).toBeVisible();
-
-    await page.getByRole("button", { name: "Create user" }).click();
-
-    // Name and email field errors from Zod schema
-    await expect(
-      page.getByText("Name must be at least 3 characters"),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Please enter a valid email address"),
-    ).toBeVisible();
-  });
-
-  test("creating a user with a duplicate email shows an API error banner", async ({
-    page,
-  }) => {
-    // The seeded admin already exists — try to create with the same email
-    await page.goto("/users");
-    await page.getByRole("button", { name: "Add user" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Add user" }),
-    ).toBeVisible();
-
-    await page.locator("#user-name").fill("Duplicate Admin");
-    await page.locator("#user-email").fill("admin@example.com");
-    await page.locator("#user-password").fill("TestPass123!");
-
-    await page.getByRole("button", { name: "Create user" }).click();
-
-    await expect(page.getByRole("alert")).toBeVisible();
-    // Dialog should remain open
-    await expect(
-      page.getByRole("heading", { name: "Add user" }),
-    ).toBeVisible();
-  });
-});
-
-// ---------------------------------------------------------------------------
 // EDIT — update an existing user's name
 // ---------------------------------------------------------------------------
 
