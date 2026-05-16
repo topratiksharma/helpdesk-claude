@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import UsersPage from './pages/users/UsersPage'
 import TicketsPage from './pages/tickets/TicketsPage'
+import TicketDetailPage from './pages/tickets/TicketDetailPage'
 import ProtectedLayout from './layouts/ProtectedLayout'
 import AdminLayout from './layouts/AdminLayout'
 
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'tickets', element: <TicketsPage /> },
+      { path: 'tickets/:id', element: <TicketDetailPage /> },
       {
         element: <AdminLayout />,
         children: [{ path: 'users', element: <UsersPage /> }],

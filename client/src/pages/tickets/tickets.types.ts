@@ -8,6 +8,24 @@ export interface TicketListItem extends Ticket {
   _count: { messages: number }
 }
 
+export interface Message {
+  id: string
+  body: string
+  htmlBody?: string
+  sender: 'agent' | 'customer'
+  createdAt: string
+  author: { id: string; name: string; email: string } | null
+}
+
+export interface TicketDetail extends Ticket {
+  assignedTo: { id: string; name: string; email: string } | null
+  messages: Message[]
+}
+
+export interface TicketDetailResponse {
+  ticket: TicketDetail
+}
+
 export interface TicketsResponse {
   tickets: TicketListItem[]
   total: number
