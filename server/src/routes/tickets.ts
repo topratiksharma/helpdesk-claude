@@ -5,15 +5,24 @@ import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
-import { MessageSender } from "../generated/prisma";
+import { MessageSender, Prisma } from "../generated/prisma";
 
-const SORTABLE_FIELDS = ["id", "subject", "fromName", "status", "updatedAt"] as const;
-type SortField = typeof SORTABLE_FIELDS[number];
+const SORTABLE_FIELDS = [
+  "id",
+  "subject",
+  "fromName",
+  "status",
+  "updatedAt",
+] as const;
+type SortField = (typeof SORTABLE_FIELDS)[number];
 
 const listTicketsQuerySchema = z.object({
   status: z.enum(["open", "resolved", "closed"]).optional(),
-  category: z.enum(["general_questions", "technical_questions", "refund"]).optional(),
+  category: z
+    .enum(["general_questions", "technical_questions", "refund"])
+    .optional(),
   assignedToId: z.string().optional(),
+  search: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.enum(SORTABLE_FIELDS).default("updatedAt"),
@@ -29,11 +38,27 @@ ticketsRouter.get("/", requireAuth, async (req, res) => {
     return;
   }
 
-  const { status, category, assignedToId, page, limit, sortBy, sortOrder } = query.data;
-  const where = {
+  const {
+    status,
+    category,
+    assignedToId,
+    search,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  } = query.data;
+  const where: Prisma.TicketWhereInput = {
     ...(status !== undefined && { status }),
     ...(category !== undefined && { category }),
     ...(assignedToId !== undefined && { assignedToId }),
+    ...(search && {
+      OR: [
+        { subject: { contains: search, mode: "insensitive" } },
+        { fromName: { contains: search, mode: "insensitive" } },
+        { fromEmail: { contains: search, mode: "insensitive" } },
+      ],
+    }),
   };
 
   const [tickets, total] = await Promise.all([
@@ -87,7 +112,10 @@ ticketsRouter.post("/", requireAuth, async (req, res) => {
 
 ticketsRouter.get("/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid ticket ID." }); return; }
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ticket ID." });
+    return;
+  }
 
   const ticket = await prisma.ticket.findUnique({
     where: { id },
@@ -112,7 +140,10 @@ ticketsRouter.get("/:id", requireAuth, async (req, res) => {
 
 ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid ticket ID." }); return; }
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ticket ID." });
+    return;
+  }
 
   const data = validate(updateTicketSchema, req.body, res);
   if (!data) return;
@@ -123,7 +154,7 @@ ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
     return;
   }
 
-  const update: Record<string, unknown> = {};
+  const update: Prisma.TicketUncheckedUpdateInput = {};
   if (data.status !== undefined) update.status = data.status;
   if (data.category !== undefined) update.category = data.category;
   if (data.assignedToId !== undefined) update.assignedToId = data.assignedToId;
@@ -142,7 +173,10 @@ ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
 
 ticketsRouter.delete("/:id", requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid ticket ID." }); return; }
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ticket ID." });
+    return;
+  }
 
   const existing = await prisma.ticket.findUnique({ where: { id } });
   if (!existing) {
