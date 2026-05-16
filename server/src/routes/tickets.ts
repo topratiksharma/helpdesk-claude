@@ -1,14 +1,15 @@
 import { Router } from "express";
-import { createTicketSchema, updateTicketSchema } from "@helpdesk/core";
+import {
+  createTicketSchema,
+  updateTicketSchema,
+  ticketsListQuerySchema,
+  type TicketSortField,
+} from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender, Prisma } from "../generated/prisma";
-import {
-  ticketsListQuerySchema,
-  type TicketSortField,
-} from "../schemas/tickets";
 
 export const ticketsRouter = Router();
 

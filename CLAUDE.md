@@ -223,8 +223,7 @@ core/src/
 **Rules:**
 - Each new domain gets its own file under `core/src/schemas/`
 - Add a re-export line in `core/src/index.ts`: `export * from './schemas/<domain>'`
-- If a schema validates a request body on the server AND drives a form on the client → put it in the appropriate schema file
-- If a schema is server-only (e.g. query param parsing) or client-only → keep it local
+- **All schemas go in `core`** — including server-only schemas like query param parsing. There are no local schemas on the client or server.
 - The `*.types.ts` file re-exports from `@helpdesk/core` and adds any React-specific types (e.g. prop interfaces) that don't belong in core
 - `core` is framework-agnostic — no React, no Express, no Prisma imports
 
