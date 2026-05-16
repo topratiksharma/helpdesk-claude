@@ -6,6 +6,7 @@ import {
   type SortingState,
   type OnChangeFn,
 } from '@tanstack/react-table'
+import { useNavigate } from 'react-router'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { type TicketListItem, type TicketCategory } from './tickets.types'
 import type { TicketStatus } from './tickets.types'
@@ -20,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CATEGORY_LABELS, STATUS_STYLES } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 
 interface TicketsTableProps {
   tickets: TicketListItem[]
@@ -29,12 +30,12 @@ interface TicketsTableProps {
   onSortingChange: OnChangeFn<SortingState>
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(iso))
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('')
 }
 
 function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
@@ -49,7 +50,9 @@ const columns: ColumnDef<TicketListItem>[] = [
     header: '#',
     enableSorting: true,
     cell: ({ getValue }) => (
-      <span className="text-xs text-muted-foreground">{getValue<number>()}</span>
+      <span className="font-mono text-[11px] text-muted-foreground/60 tracking-wide">
+        {getValue<number>()}
+      </span>
     ),
   },
   {
@@ -65,9 +68,16 @@ const columns: ColumnDef<TicketListItem>[] = [
     header: 'From',
     enableSorting: true,
     cell: ({ row }) => (
-      <div>
-        <div className="text-sm">{row.original.fromName}</div>
-        <div className="text-xs text-muted-foreground">{row.original.fromEmail}</div>
+      <div className="flex items-center gap-2.5">
+        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0 select-none">
+          {getInitials(row.original.fromName)}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm leading-tight">{row.original.fromName}</div>
+          <div className="text-xs text-muted-foreground truncate max-w-[160px]">
+            {row.original.fromEmail}
+          </div>
+        </div>
       </div>
     ),
   },
@@ -110,6 +120,7 @@ const columns: ColumnDef<TicketListItem>[] = [
 const SKELETON_ROWS = 5
 
 export function TicketsTable({ tickets, loading, sorting, onSortingChange }: TicketsTableProps) {
+  const navigate = useNavigate()
   const table = useReactTable({
     data: tickets,
     columns,
@@ -151,9 +162,17 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
           <TableBody>
             {Array.from({ length: SKELETON_ROWS }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                <TableCell><Skeleton className="h-3.5 w-6" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-3.5 w-28" />
+                      <Skeleton className="h-3 w-36" />
+                    </div>
+                  </div>
+                </TableCell>
                 <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -179,7 +198,14 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
         <TableHeader>{headerRow}</TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow
+              key={row.id}
+              className={cn(
+                'cursor-pointer hover:bg-muted/50 transition-colors',
+                row.original.status === 'open' && 'border-l-2 border-l-amber-400',
+              )}
+              onClick={() => navigate(`/tickets/${row.original.id}`)}
+            >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
