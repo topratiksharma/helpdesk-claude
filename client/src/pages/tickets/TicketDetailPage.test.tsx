@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { useSession } from '@/lib/auth-client'
@@ -26,7 +26,74 @@ vi.mock('react-router', () => ({
   useNavigate: () => vi.fn(),
 }))
 
-// ─── Browser API polyfills required by Radix UI ───────────────────────────────
+// Replace shadcn/ui Select with native <select> so jsdom can interact with it.
+// SelectTrigger sets labelRef so SelectContent can apply aria-label to the <select>.
+vi.mock('@/components/ui/select', async () => {
+  const { createContext, useContext, useRef, createElement } = await import('react')
+  type Ctx = {
+    value: string
+    onValueChange: (v: string) => void
+    disabled?: boolean
+    labelRef: { current: string }
+  }
+  const SelectCtx = createContext<Ctx | null>(null)
+
+  function Select({
+    children,
+    value,
+    onValueChange,
+    disabled,
+  }: {
+    children: React.ReactNode
+    value: string
+    onValueChange: (v: string) => void
+    disabled?: boolean
+  }) {
+    const labelRef = useRef('')
+    return createElement(
+      SelectCtx.Provider,
+      { value: { value, onValueChange, disabled, labelRef } },
+      children,
+    )
+  }
+
+  function SelectTrigger({
+    'aria-label': ariaLabel,
+  }: {
+    'aria-label'?: string
+    [k: string]: unknown
+  }) {
+    const ctx = useContext(SelectCtx)
+    if (ariaLabel && ctx) ctx.labelRef.current = ariaLabel
+    return null
+  }
+
+  function SelectValue() {
+    return null
+  }
+
+  function SelectContent({ children }: { children: React.ReactNode }) {
+    const ctx = useContext(SelectCtx)!
+    return createElement(
+      'select',
+      {
+        'aria-label': ctx.labelRef.current,
+        value: ctx.value,
+        disabled: ctx.disabled,
+        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => ctx.onValueChange(e.target.value),
+      },
+      children,
+    )
+  }
+
+  function SelectItem({ value, children }: { value: string; children: React.ReactNode }) {
+    return createElement('option', { value }, children)
+  }
+
+  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
+})
+
+// ─── Browser API polyfills ────────────────────────────────────────────────────
 
 beforeAll(() => {
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -34,23 +101,6 @@ beforeAll(() => {
     unobserve: vi.fn(),
     disconnect: vi.fn(),
   }))
-  Element.prototype.scrollIntoView = vi.fn()
-  Element.prototype.hasPointerCapture = vi.fn()
-  Element.prototype.setPointerCapture = vi.fn()
-  Element.prototype.releasePointerCapture = vi.fn()
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  })
 })
 
 // ─── Typed mocks ──────────────────────────────────────────────────────────────
@@ -105,6 +155,13 @@ const categorisedTicket: TicketDetailResponse = {
   ticket: { ...baseTicket, category: 'technical_questions' as const },
 }
 
+// Make a 404 AxiosError so the query's retry function short-circuits immediately.
+function make404Error() {
+  const err = Object.assign(new Error('Not found'), { response: { status: 404 } })
+  mockedAxios.isAxiosError.mockReturnValue(true)
+  return err
+}
+
 function setupAdminGet(ticketResponse = unassignedTicket) {
   mockedAxios.get.mockImplementation((url: string) => {
     if ((url as string).includes('/api/agents')) return Promise.resolve({ data: mockAgents })
@@ -120,7 +177,7 @@ describe('TicketDetailPage — loading state', () => {
     mockedAxios.get.mockReturnValue(new Promise(() => {}))
   })
 
-  it('shows skeleton while ticket is loading', () => {
+  it('does not render ticket content while loading', () => {
     renderWithProviders(<TicketDetailPage />)
     expect(screen.queryByText('Login issue')).not.toBeInTheDocument()
   })
@@ -131,7 +188,7 @@ describe('TicketDetailPage — loading state', () => {
 describe('TicketDetailPage — error state', () => {
   beforeEach(() => {
     mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
-    mockedAxios.get.mockRejectedValue(new Error('Not found'))
+    mockedAxios.get.mockRejectedValue(make404Error())
   })
 
   it('shows "Ticket not found" when the fetch fails', async () => {
@@ -180,48 +237,32 @@ describe('TicketDetailPage — agent assignment (admin)', () => {
     mockedAxios.patch.mockResolvedValue({ data: {} })
   })
 
-  it('renders a Select dropdown for agent assignment', async () => {
+  it('renders a Select for agent assignment', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
     expect(screen.getByRole('combobox', { name: 'Assigned agent' })).toBeInTheDocument()
   })
 
-  it('shows "Unassigned" as the default value when no agent is assigned', async () => {
+  it('defaults to "Unassigned" when no agent is assigned', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    expect(screen.getByRole('combobox', { name: 'Assigned agent' })).toHaveTextContent(
-      /unassigned/i,
-    )
+    expect(screen.getByRole('combobox', { name: 'Assigned agent' })).toHaveValue('unassigned')
   })
 
-  it('shows the assigned agent name as the selected value', async () => {
+  it('shows the currently assigned agent as the selected value', async () => {
     setupAdminGet(assignedTicket)
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    expect(screen.getByRole('combobox', { name: 'Assigned agent' })).toHaveTextContent(
-      /alice agent/i,
-    )
+    expect(screen.getByRole('combobox', { name: 'Assigned agent' })).toHaveValue('a1')
   })
 
-  it('lists all agents in the dropdown when opened', async () => {
-    const user = userEvent.setup()
+  it('lists all agents plus "Unassigned" as options', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-
-    await user.click(screen.getByRole('combobox', { name: 'Assigned agent' }))
-
-    expect(await screen.findByRole('option', { name: 'Alice Agent' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Bob Agent' })).toBeInTheDocument()
-  })
-
-  it('includes an "Unassigned" option in the dropdown', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<TicketDetailPage />)
-    await screen.findByText('Login issue')
-
-    await user.click(screen.getByRole('combobox', { name: 'Assigned agent' }))
-
-    expect(await screen.findByRole('option', { name: /unassigned/i })).toBeInTheDocument()
+    const select = screen.getByRole('combobox', { name: 'Assigned agent' })
+    expect(within(select).getByRole('option', { name: 'Unassigned' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Alice Agent' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Bob Agent' })).toBeInTheDocument()
   })
 
   it('calls PATCH with the agent id when an agent is selected', async () => {
@@ -229,16 +270,13 @@ describe('TicketDetailPage — agent assignment (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Assigned agent' }))
-    await user.click(await screen.findByRole('option', { name: 'Alice Agent' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Assigned agent' }), 'a1')
 
-    await waitFor(() => {
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
-        '/api/tickets/1',
-        { assignedToId: 'a1' },
-        { withCredentials: true },
-      )
-    })
+    expect(mockedAxios.patch).toHaveBeenCalledWith(
+      '/api/tickets/1',
+      { assignedToId: 'a1' },
+      { withCredentials: true },
+    )
   })
 
   it('calls PATCH with null when "Unassigned" is selected', async () => {
@@ -247,16 +285,16 @@ describe('TicketDetailPage — agent assignment (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Assigned agent' }))
-    await user.click(await screen.findByRole('option', { name: /^unassigned$/i }))
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Assigned agent' }),
+      'unassigned',
+    )
 
-    await waitFor(() => {
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
-        '/api/tickets/1',
-        { assignedToId: null },
-        { withCredentials: true },
-      )
-    })
+    expect(mockedAxios.patch).toHaveBeenCalledWith(
+      '/api/tickets/1',
+      { assignedToId: null },
+      { withCredentials: true },
+    )
   })
 
   it('shows an error message when the assignment mutation fails', async () => {
@@ -265,8 +303,7 @@ describe('TicketDetailPage — agent assignment (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Assigned agent' }))
-    await user.click(await screen.findByRole('option', { name: 'Alice Agent' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Assigned agent' }), 'a1')
 
     expect(await screen.findByText(/failed to update/i)).toBeInTheDocument()
   })
@@ -310,49 +347,35 @@ describe('TicketDetailPage — category update (admin)', () => {
     mockedAxios.patch.mockResolvedValue({ data: {} })
   })
 
-  it('renders a Select dropdown for category', async () => {
+  it('renders a Select for ticket category', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
     expect(screen.getByRole('combobox', { name: 'Ticket category' })).toBeInTheDocument()
   })
 
-  it('shows "No category" when ticket category is null', async () => {
+  it('defaults to "none" when ticket category is null', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    expect(screen.getByRole('combobox', { name: 'Ticket category' })).toHaveTextContent(
-      /no category/i,
-    )
+    expect(screen.getByRole('combobox', { name: 'Ticket category' })).toHaveValue('none')
   })
 
-  it('shows the current category name as the selected value', async () => {
+  it('shows the current category as the selected value', async () => {
     setupAdminGet(categorisedTicket)
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    expect(screen.getByRole('combobox', { name: 'Ticket category' })).toHaveTextContent(
-      /technical questions/i,
+    expect(screen.getByRole('combobox', { name: 'Ticket category' })).toHaveValue(
+      'technical_questions',
     )
   })
 
-  it('lists all categories in the dropdown when opened', async () => {
-    const user = userEvent.setup()
+  it('lists all categories plus "No category" as options', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-
-    await user.click(screen.getByRole('combobox', { name: 'Ticket category' }))
-
-    expect(await screen.findByRole('option', { name: 'General Questions' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Technical Questions' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Refund' })).toBeInTheDocument()
-  })
-
-  it('includes a "No category" option in the dropdown', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<TicketDetailPage />)
-    await screen.findByText('Login issue')
-
-    await user.click(screen.getByRole('combobox', { name: 'Ticket category' }))
-
-    expect(await screen.findByRole('option', { name: /no category/i })).toBeInTheDocument()
+    const select = screen.getByRole('combobox', { name: 'Ticket category' })
+    expect(within(select).getByRole('option', { name: 'No category' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'General Questions' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Technical Questions' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Refund' })).toBeInTheDocument()
   })
 
   it('calls PATCH with the category value when a category is selected', async () => {
@@ -360,16 +383,16 @@ describe('TicketDetailPage — category update (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Ticket category' }))
-    await user.click(await screen.findByRole('option', { name: 'Technical Questions' }))
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Ticket category' }),
+      'technical_questions',
+    )
 
-    await waitFor(() => {
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
-        '/api/tickets/1',
-        { category: 'technical_questions' },
-        { withCredentials: true },
-      )
-    })
+    expect(mockedAxios.patch).toHaveBeenCalledWith(
+      '/api/tickets/1',
+      { category: 'technical_questions' },
+      { withCredentials: true },
+    )
   })
 
   it('calls PATCH with null when "No category" is selected', async () => {
@@ -378,16 +401,13 @@ describe('TicketDetailPage — category update (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Ticket category' }))
-    await user.click(await screen.findByRole('option', { name: /^no category$/i }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ticket category' }), 'none')
 
-    await waitFor(() => {
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
-        '/api/tickets/1',
-        { category: null },
-        { withCredentials: true },
-      )
-    })
+    expect(mockedAxios.patch).toHaveBeenCalledWith(
+      '/api/tickets/1',
+      { category: null },
+      { withCredentials: true },
+    )
   })
 
   it('shows an error message when the category mutation fails', async () => {
@@ -396,8 +416,10 @@ describe('TicketDetailPage — category update (admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
 
-    await user.click(screen.getByRole('combobox', { name: 'Ticket category' }))
-    await user.click(await screen.findByRole('option', { name: 'Refund' }))
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Ticket category' }),
+      'refund',
+    )
 
     expect(await screen.findByText(/failed to update/i)).toBeInTheDocument()
   })

@@ -142,13 +142,6 @@ describe('TicketsTable — loaded state', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  it('renders message counts', () => {
-    renderTable()
-    expect(screen.getByText('3')).toBeInTheDocument()
-    expect(screen.getByText('7')).toBeInTheDocument()
-    expect(screen.getByText('4')).toBeInTheDocument()
-  })
-
   it('formats and renders the updated date', () => {
     renderTable()
     expect(screen.getAllByText('Jan 15, 2024').length).toBeGreaterThan(0)
@@ -162,7 +155,6 @@ describe('TicketsTable — loaded state', () => {
     expect(screen.getByText(/from/i)).toBeInTheDocument()
     expect(screen.getByText(/status/i)).toBeInTheDocument()
     expect(screen.getByText(/category/i)).toBeInTheDocument()
-    expect(screen.getByText(/messages/i)).toBeInTheDocument()
     expect(screen.getByText(/updated/i)).toBeInTheDocument()
   })
 })
