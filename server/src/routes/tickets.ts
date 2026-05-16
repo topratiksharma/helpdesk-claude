@@ -5,12 +5,15 @@ import { validate } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender, Prisma } from "../generated/prisma";
-import { TicketsQuerySchema, type TicketSortField } from "../schemas/tickets";
+import {
+  ticketsListQuerySchema,
+  type TicketSortField,
+} from "../schemas/tickets";
 
 export const ticketsRouter = Router();
 
 ticketsRouter.get("/", requireAuth, async (req, res) => {
-  const query = TicketsQuerySchema.safeParse(req.query);
+  const query = ticketsListQuerySchema.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.issues[0].message });
     return;

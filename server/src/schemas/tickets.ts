@@ -11,7 +11,7 @@ const SORTABLE_FIELDS = [
 
 export type TicketSortField = (typeof SORTABLE_FIELDS)[number];
 
-export const TicketsQuerySchema = z.object({
+export const ticketsListQuerySchema = z.object({
   status: TicketStatusEnum.optional(),
   category: TicketCategoryEnum.optional(),
   assignedToId: z.string().optional(),
@@ -22,4 +22,4 @@ export const TicketsQuerySchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export type TicketsQuery = z.infer<typeof TicketsQuerySchema>;
+export type TicketsQuery = z.infer<typeof ticketsListQuerySchema>;
