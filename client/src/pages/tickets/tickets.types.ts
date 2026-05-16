@@ -1,7 +1,7 @@
 export type { Ticket, TicketStatus, TicketCategory, CreateTicketInput } from '@helpdesk/core'
 export { TicketStatusEnum, TicketCategoryEnum } from '@helpdesk/core'
 
-import type { Ticket } from '@helpdesk/core'
+import type { Ticket, TicketStatus, TicketCategory } from '@helpdesk/core'
 
 export interface TicketListItem extends Ticket {
   assignedTo: { id: string; name: string; email: string } | null
@@ -21,4 +21,13 @@ export type SortOrder = 'asc' | 'desc'
 export interface TicketSortState {
   field: TicketSortField
   order: SortOrder
+}
+
+export type StatusFilter = TicketStatus | 'all'
+export type CategoryFilter = TicketCategory | 'all'
+
+export interface TicketFilterState {
+  status: StatusFilter
+  category: CategoryFilter
+  search: string
 }
