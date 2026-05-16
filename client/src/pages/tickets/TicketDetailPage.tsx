@@ -19,6 +19,7 @@ import {
   type TicketDetailResponse,
   type Message,
   type AgentsResponse,
+  type TicketCategory,
 } from './tickets.types'
 
 function getInitials(name: string): string {
@@ -152,6 +153,18 @@ export default function TicketDetailPage() {
     },
   })
 
+  const categoryMutation = useMutation({
+    mutationFn: (category: TicketCategory | null) =>
+      axios.patch(
+        `/api/tickets/${id}`,
+        { category },
+        { withCredentials: true },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', id] })
+    },
+  })
+
   const ticket = data?.ticket
   const agents = agentsData?.agents ?? []
 
@@ -245,9 +258,38 @@ export default function TicketDetailPage() {
             <p className="text-sm text-foreground">{formatDateTime(ticket.updatedAt)}</p>
           </MetaItem>
           <MetaItem icon={Tag} label="Category">
-            <p className="text-sm text-foreground">
-              {ticket.category ? CATEGORY_LABELS[ticket.category] : '—'}
-            </p>
+            {isAdmin ? (
+              <>
+                <Select
+                  value={ticket.category ?? 'none'}
+                  onValueChange={(value) =>
+                    categoryMutation.mutate(value === 'none' ? null : value as TicketCategory)
+                  }
+                  disabled={categoryMutation.isPending}
+                >
+                  <SelectTrigger className="h-8 text-sm w-full" aria-label="Ticket category">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No category</SelectItem>
+                    {(Object.entries(CATEGORY_LABELS) as [TicketCategory, string][]).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+                {categoryMutation.isError && (
+                  <p className="text-[11px] text-destructive mt-0.5">Failed to update.</p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-foreground">
+                {ticket.category ? CATEGORY_LABELS[ticket.category] : '—'}
+              </p>
+            )}
           </MetaItem>
           <MetaItem icon={UserCheck} label="Assigned to">
             {isAdmin ? (
@@ -259,7 +301,7 @@ export default function TicketDetailPage() {
                   }
                   disabled={assignMutation.isPending}
                 >
-                  <SelectTrigger className="h-8 text-sm w-full">
+                  <SelectTrigger className="h-8 text-sm w-full" aria-label="Assigned agent">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

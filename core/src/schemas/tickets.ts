@@ -20,7 +20,7 @@ export type CreateTicketInput = z.infer<typeof createTicketSchema>
 export const updateTicketSchema = z
   .object({
     status: TicketStatusEnum.optional(),
-    category: TicketCategoryEnum.optional(),
+    category: TicketCategoryEnum.nullable().optional(),
     assignedToId: z.string().min(1).nullable().optional(),
     subject: z.string().trim().min(1).max(255).optional(),
   })

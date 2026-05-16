@@ -12,6 +12,10 @@ vi.mock('axios', () => ({
   },
 }))
 
+vi.mock('react-router', () => ({
+  useNavigate: () => vi.fn(),
+}))
+
 const mockedAxios = vi.mocked(axios)
 
 const mockResponse: TicketsResponse = {
