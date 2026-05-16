@@ -1,38 +1,16 @@
 import { Router } from "express";
-import { z } from "zod";
 import { createTicketSchema, updateTicketSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender, Prisma } from "../generated/prisma";
-
-const SORTABLE_FIELDS = [
-  "id",
-  "subject",
-  "fromName",
-  "status",
-  "updatedAt",
-] as const;
-type SortField = (typeof SORTABLE_FIELDS)[number];
-
-const listTicketsQuerySchema = z.object({
-  status: z.enum(["open", "resolved", "closed"]).optional(),
-  category: z
-    .enum(["general_questions", "technical_questions", "refund"])
-    .optional(),
-  assignedToId: z.string().optional(),
-  search: z.string().optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  sortBy: z.enum(SORTABLE_FIELDS).default("updatedAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+import { TicketsQuerySchema, type TicketSortField } from "../schemas/tickets";
 
 export const ticketsRouter = Router();
 
 ticketsRouter.get("/", requireAuth, async (req, res) => {
-  const query = listTicketsQuerySchema.safeParse(req.query);
+  const query = TicketsQuerySchema.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.issues[0].message });
     return;
@@ -68,7 +46,7 @@ ticketsRouter.get("/", requireAuth, async (req, res) => {
         assignedTo: { select: { id: true, name: true, email: true } },
         _count: { select: { messages: true } },
       },
-      orderBy: { [sortBy as SortField]: sortOrder },
+      orderBy: { [sortBy as TicketSortField]: sortOrder },
       skip: (page - 1) * limit,
       take: limit,
     }),
