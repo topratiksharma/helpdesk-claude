@@ -11,6 +11,12 @@ export const CATEGORY_LABELS: Record<TicketCategory, string> = {
   refund: 'Refund',
 }
 
+export const STATUS_LABELS: Record<TicketStatus, string> = {
+  open: 'Open',
+  resolved: 'Resolved',
+  closed: 'Closed',
+}
+
 export const STATUS_STYLES: Record<TicketStatus, string> = {
   open: 'bg-amber-50 text-amber-700 border-amber-300 font-medium',
   resolved: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-medium',

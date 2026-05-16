@@ -25,7 +25,12 @@ export const updateTicketSchema = z
     subject: z.string().trim().min(1).max(255).optional(),
   })
   .superRefine((data, ctx) => {
-    if (!data.status && !data.category && data.assignedToId === undefined && !data.subject) {
+    if (
+      data.status === undefined &&
+      data.category === undefined &&
+      data.assignedToId === undefined &&
+      data.subject === undefined
+    ) {
       ctx.addIssue({ code: 'custom', message: 'At least one field must be provided.' })
     }
   })

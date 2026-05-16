@@ -2,7 +2,7 @@ import axios from 'axios'
 import { type ElementType } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, User, Tag, UserCheck, Calendar } from 'lucide-react'
+import { ArrowLeft, User, Tag, UserCheck, Calendar, Circle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -13,13 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
-import { CATEGORY_LABELS, STATUS_STYLES, Role } from '@/lib/constants'
+import { CATEGORY_LABELS, STATUS_LABELS, STATUS_STYLES, Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
 import {
   type TicketDetailResponse,
   type Message,
   type AgentsResponse,
   type TicketCategory,
+  type TicketStatus,
 } from './tickets.types'
 
 function getInitials(name: string): string {
@@ -153,6 +154,18 @@ export default function TicketDetailPage() {
     },
   })
 
+  const statusMutation = useMutation({
+    mutationFn: (status: TicketStatus) =>
+      axios.patch(
+        `/api/tickets/${id}`,
+        { status },
+        { withCredentials: true },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', id] })
+    },
+  })
+
   const categoryMutation = useMutation({
     mutationFn: (category: TicketCategory | null) =>
       axios.patch(
@@ -177,8 +190,8 @@ export default function TicketDetailPage() {
           <Skeleton className="h-5 w-16 rounded-full" />
         </div>
         <Skeleton className="h-9 w-[440px] mb-6" />
-        <div className="grid grid-cols-4 gap-4 p-4 rounded-md border border-border mb-8">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-5 gap-4 p-4 rounded-md border border-border mb-8">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-4 w-20" />
@@ -248,7 +261,7 @@ export default function TicketDetailPage() {
       </div>
 
       <div className="bg-muted/40 rounded-md border border-border mb-8">
-        <div className="grid grid-cols-4 gap-4 px-4 py-3.5">
+        <div className="grid grid-cols-5 gap-4 px-4 py-3.5">
           <MetaItem icon={User} label="From">
             <p className="text-sm text-foreground truncate" title={`${ticket.fromName} · ${ticket.fromEmail}`}>
               {ticket.fromName} · {ticket.fromEmail}
@@ -256,6 +269,29 @@ export default function TicketDetailPage() {
           </MetaItem>
           <MetaItem icon={Calendar} label="Last updated">
             <p className="text-sm text-foreground">{formatDateTime(ticket.updatedAt)}</p>
+          </MetaItem>
+          <MetaItem icon={Circle} label="Status">
+            <Select
+              value={ticket.status}
+              onValueChange={(value) => statusMutation.mutate(value as TicketStatus)}
+              disabled={statusMutation.isPending}
+            >
+              <SelectTrigger className="h-8 text-sm w-full" aria-label="Ticket status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.entries(STATUS_LABELS) as [TicketStatus, string][]).map(
+                  ([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+            {statusMutation.isError && (
+              <p className="text-[11px] text-destructive mt-0.5">Failed to update.</p>
+            )}
           </MetaItem>
           <MetaItem icon={Tag} label="Category">
             {isAdmin ? (

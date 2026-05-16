@@ -427,6 +427,81 @@ describe('TicketDetailPage — category update (admin)', () => {
 
 // ─── Category update — non-admin ──────────────────────────────────────────────
 
+// ─── Status update ────────────────────────────────────────────────────────────
+
+describe('TicketDetailPage — status update', () => {
+  // Status Select is visible to all authenticated users (agents + admins).
+
+  it('renders a Select for ticket status (admin)', async () => {
+    mockedUseSession.mockReturnValue(adminSession as ReturnType<typeof useSession>)
+    setupAdminGet()
+    mockedAxios.patch.mockResolvedValue({ data: {} })
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    expect(screen.getByRole('combobox', { name: 'Ticket status' })).toBeInTheDocument()
+  })
+
+  it('renders a Select for ticket status (agent)', async () => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    mockedAxios.patch.mockResolvedValue({ data: {} })
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    expect(screen.getByRole('combobox', { name: 'Ticket status' })).toBeInTheDocument()
+  })
+
+  it('shows the current status as the selected value', async () => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    expect(screen.getByRole('combobox', { name: 'Ticket status' })).toHaveValue('open')
+  })
+
+  it('lists all status options in the dropdown', async () => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    const select = screen.getByRole('combobox', { name: 'Ticket status' })
+    expect(within(select).getByRole('option', { name: 'Open' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Resolved' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Closed' })).toBeInTheDocument()
+  })
+
+  it('calls PATCH with the new status when changed', async () => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    mockedAxios.patch.mockResolvedValue({ data: {} })
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ticket status' }), 'resolved')
+
+    expect(mockedAxios.patch).toHaveBeenCalledWith(
+      '/api/tickets/1',
+      { status: 'resolved' },
+      { withCredentials: true },
+    )
+  })
+
+  it('shows an error message when the status mutation fails', async () => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    mockedAxios.patch.mockRejectedValue(new Error('Server error'))
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ticket status' }), 'closed')
+
+    expect(await screen.findByText(/failed to update/i)).toBeInTheDocument()
+  })
+})
+
+// ─── Category update — non-admin ──────────────────────────────────────────────
+
 describe('TicketDetailPage — category update (non-admin)', () => {
   beforeEach(() => {
     mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
