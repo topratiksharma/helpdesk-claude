@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+export const loginSchema = z.object({
+  email: z.email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+export type LoginInput = z.infer<typeof loginSchema>
+
 export const createUserSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
   email: z.email('Please enter a valid email address'),

@@ -1,18 +1,13 @@
 import { useNavigate, Navigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { signIn, useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { loginSchema, type LoginInput } from '@helpdesk/core'
 
-const loginSchema = z.object({
-  email: z.email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
-
-type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormValues = LoginInput
 
 const LogoMark = ({ className }: { className?: string }) => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className={className}>
