@@ -44,3 +44,13 @@ export interface User {
   role: UserRole
   createdAt: string
 }
+
+export interface AgentListItem {
+  id: string
+  name: string
+  email: string
+}
+
+export interface AgentsResponse {
+  agents: AgentListItem[]
+}

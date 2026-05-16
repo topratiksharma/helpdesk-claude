@@ -1,13 +1,25 @@
 import axios from 'axios'
 import { type ElementType } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, User, Tag, UserCheck, Calendar } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
-import { CATEGORY_LABELS, STATUS_STYLES } from '@/lib/constants'
-import { type TicketDetailResponse, type Message } from './tickets.types'
+import { CATEGORY_LABELS, STATUS_STYLES, Role } from '@/lib/constants'
+import { useSession } from '@/lib/auth-client'
+import {
+  type TicketDetailResponse,
+  type Message,
+  type AgentsResponse,
+} from './tickets.types'
 
 function getInitials(name: string): string {
   return name
@@ -84,19 +96,17 @@ function MessageBubble({ message }: { message: Message }) {
 interface MetaItemProps {
   icon: ElementType
   label: string
-  value: string
+  children: React.ReactNode
 }
 
-function MetaItem({ icon: Icon, label, value }: MetaItemProps) {
+function MetaItem({ icon: Icon, label, children }: MetaItemProps) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground uppercase tracking-[0.06em]">
         <Icon size={11} strokeWidth={2} />
         {label}
       </div>
-      <p className="text-sm text-foreground truncate" title={value}>
-        {value}
-      </p>
+      {children}
     </div>
   )
 }
@@ -104,6 +114,9 @@ function MetaItem({ icon: Icon, label, value }: MetaItemProps) {
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { data: session } = useSession()
+  const isAdmin = session?.user.role === Role.admin
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['ticket', id],
@@ -118,11 +131,33 @@ export default function TicketDetailPage() {
     },
   })
 
+  const { data: agentsData } = useQuery({
+    queryKey: ['agents'],
+    queryFn: () =>
+      axios
+        .get<AgentsResponse>('/api/agents', { withCredentials: true })
+        .then((res) => res.data),
+    enabled: isAdmin,
+  })
+
+  const assignMutation = useMutation({
+    mutationFn: (assignedToId: string | null) =>
+      axios.patch(
+        `/api/tickets/${id}`,
+        { assignedToId },
+        { withCredentials: true },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', id] })
+    },
+  })
+
   const ticket = data?.ticket
+  const agents = agentsData?.agents ?? []
 
   if (isPending) {
     return (
-      <div className="animate-fade-up max-w-3xl mx-auto">
+      <div className="animate-fade-up max-w-5xl mx-auto">
         <Skeleton className="h-4 w-20 mb-10" />
         <div className="flex items-center gap-2 mb-3">
           <Skeleton className="h-3.5 w-8" />
@@ -151,7 +186,7 @@ export default function TicketDetailPage() {
 
   if (isError || !ticket) {
     return (
-      <div className="animate-fade-up max-w-3xl mx-auto">
+      <div className="animate-fade-up max-w-5xl mx-auto">
         <button
           onClick={() => navigate('/tickets')}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
@@ -176,7 +211,7 @@ export default function TicketDetailPage() {
   }
 
   return (
-    <div className="animate-fade-up max-w-3xl mx-auto">
+    <div className="animate-fade-up max-w-5xl mx-auto">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
@@ -199,27 +234,54 @@ export default function TicketDetailPage() {
         </h1>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-4 py-3.5 bg-muted/40 rounded-md border border-border mb-8">
-        <MetaItem
-          icon={User}
-          label="From"
-          value={`${ticket.fromName} · ${ticket.fromEmail}`}
-        />
-        <MetaItem
-          icon={Tag}
-          label="Category"
-          value={ticket.category ? CATEGORY_LABELS[ticket.category] : '—'}
-        />
-        <MetaItem
-          icon={UserCheck}
-          label="Assigned to"
-          value={ticket.assignedTo?.name ?? 'Unassigned'}
-        />
-        <MetaItem
-          icon={Calendar}
-          label="Opened"
-          value={formatDate(ticket.createdAt)}
-        />
+      <div className="bg-muted/40 rounded-md border border-border mb-8">
+        <div className="grid grid-cols-4 gap-4 px-4 py-3.5">
+          <MetaItem icon={User} label="From">
+            <p className="text-sm text-foreground truncate" title={`${ticket.fromName} · ${ticket.fromEmail}`}>
+              {ticket.fromName} · {ticket.fromEmail}
+            </p>
+          </MetaItem>
+          <MetaItem icon={Calendar} label="Last updated">
+            <p className="text-sm text-foreground">{formatDateTime(ticket.updatedAt)}</p>
+          </MetaItem>
+          <MetaItem icon={Tag} label="Category">
+            <p className="text-sm text-foreground">
+              {ticket.category ? CATEGORY_LABELS[ticket.category] : '—'}
+            </p>
+          </MetaItem>
+          <MetaItem icon={UserCheck} label="Assigned to">
+            {isAdmin ? (
+              <>
+                <Select
+                  value={ticket.assignedTo?.id ?? 'unassigned'}
+                  onValueChange={(value) =>
+                    assignMutation.mutate(value === 'unassigned' ? null : value)
+                  }
+                  disabled={assignMutation.isPending}
+                >
+                  <SelectTrigger className="h-8 text-sm w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {assignMutation.isError && (
+                  <p className="text-[11px] text-destructive mt-0.5">Failed to update.</p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-foreground">
+                {ticket.assignedTo?.name ?? 'Unassigned'}
+              </p>
+            )}
+          </MetaItem>
+        </div>
       </div>
 
       <div className="space-y-4">

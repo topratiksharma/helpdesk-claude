@@ -8,6 +8,7 @@ import { prisma } from "./lib/prisma";
 import { requireAuth } from "./middleware/auth";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 import { usersRouter } from "./routes/users";
+import { agentsRouter } from "./routes/agents";
 import { ticketsRouter } from "./routes/tickets";
 import { statsRouter } from "./routes/stats";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
@@ -34,6 +35,7 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/api/users", usersRouter);
+app.use("/api/agents", agentsRouter);
 app.use("/api/tickets", ticketsRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/webhooks/inbound-email", inboundEmailRouter);

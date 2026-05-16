@@ -136,6 +136,16 @@ ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
     return;
   }
 
+  if (data.assignedToId) {
+    const assignee = await prisma.user.findUnique({
+      where: { id: data.assignedToId, deletedAt: null },
+    });
+    if (!assignee) {
+      res.status(400).json({ error: "Assigned user not found." });
+      return;
+    }
+  }
+
   const update: Prisma.TicketUncheckedUpdateInput = {};
   if (data.status !== undefined) update.status = data.status;
   if (data.category !== undefined) update.category = data.category;

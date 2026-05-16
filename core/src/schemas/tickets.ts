@@ -21,7 +21,7 @@ export const updateTicketSchema = z
   .object({
     status: TicketStatusEnum.optional(),
     category: TicketCategoryEnum.optional(),
-    assignedToId: z.string().nullable().optional(),
+    assignedToId: z.string().min(1).nullable().optional(),
     subject: z.string().trim().min(1).max(255).optional(),
   })
   .superRefine((data, ctx) => {
