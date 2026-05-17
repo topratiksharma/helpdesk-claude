@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import { cn, formatDateTime } from '@/lib/utils'
 import { type Message } from '../tickets.types'
 import { EmptyState } from '@/components/EmptyState'
@@ -66,9 +67,11 @@ function MessageBubble({ message }: { message: Message }) {
               ? 'bg-primary text-primary-foreground rounded-xl rounded-tr-sm'
               : 'bg-muted/60 border border-border text-foreground rounded-xl rounded-tl-sm',
           )}
-        >
-          {message.body}
-        </div>
+          {...(message.htmlBody
+            ? { dangerouslySetInnerHTML: { __html: DOMPurify.sanitize(message.htmlBody) } }
+            : { children: message.body }
+          )}
+        />
       </div>
     </div>
   )
