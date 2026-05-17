@@ -24,6 +24,7 @@ messagesRouter.post("/:ticketId/messages", requireAuth, async (req, res) => {
     data: {
       ticketId,
       body: data.body,
+      htmlBody: data.bodyHtml,
       sender: data.sender === "agent" ? MessageSender.agent : MessageSender.customer,
       authorId: req.user!.id,
     },
