@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { useSession } from '@/lib/auth-client'
@@ -13,6 +13,7 @@ vi.mock('axios', () => ({
   default: {
     get: vi.fn(),
     patch: vi.fn(),
+    post: vi.fn(),
     isAxiosError: vi.fn(),
   },
 }))
@@ -520,5 +521,144 @@ describe('TicketDetailPage — category update (non-admin)', () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
     expect(screen.getByText('Technical Questions')).toBeInTheDocument()
+  })
+})
+
+// ─── Reply form ───────────────────────────────────────────────────────────────
+
+describe('TicketDetailPage — reply form rendering', () => {
+  beforeEach(() => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+  })
+
+  it('renders the reply textarea', async () => {
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    expect(screen.getByPlaceholderText(/write a reply/i)).toBeInTheDocument()
+  })
+
+  it('renders the Send reply button', async () => {
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    expect(screen.getByRole('button', { name: /send reply/i })).toBeInTheDocument()
+  })
+})
+
+describe('TicketDetailPage — reply form validation', () => {
+  beforeEach(() => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+  })
+
+  it('shows a validation error when submitting an empty reply', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    expect(await screen.findByText(/reply cannot be empty/i)).toBeInTheDocument()
+  })
+
+  it('does not call POST when the body is empty', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    await screen.findByText(/reply cannot be empty/i)
+    expect(mockedAxios.post).not.toHaveBeenCalled()
+  })
+})
+
+describe('TicketDetailPage — reply form submission', () => {
+  beforeEach(() => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+    mockedAxios.post.mockResolvedValue({ data: {} })
+  })
+
+  it('calls POST /api/tickets/1/messages with body and sender=agent for an agent session', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.type(screen.getByPlaceholderText(/write a reply/i), 'Test reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/tickets/1/messages',
+        { body: 'Test reply', sender: 'agent' },
+        { withCredentials: true },
+      ),
+    )
+  })
+
+  it('calls POST with sender=customer for a non-agent/admin role', async () => {
+    mockedUseSession.mockReturnValue({
+      data: { user: { id: 'c1', name: 'Customer', email: 'c@test.com', role: 'customer' } },
+      isPending: false,
+    } as ReturnType<typeof useSession>)
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.type(screen.getByPlaceholderText(/write a reply/i), 'Customer reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/tickets/1/messages',
+        { body: 'Customer reply', sender: 'customer' },
+        { withCredentials: true },
+      ),
+    )
+  })
+
+  it('clears the textarea after a successful submission', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    const textarea = screen.getByPlaceholderText(/write a reply/i)
+    await user.type(textarea, 'Test reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    await waitFor(() => expect(textarea).toHaveValue(''))
+  })
+})
+
+describe('TicketDetailPage — reply form errors', () => {
+  beforeEach(() => {
+    mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
+    mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
+  })
+
+  it('shows an error alert when the POST returns an API error', async () => {
+    mockedAxios.post.mockRejectedValue({ response: { data: { error: 'Failed to send reply.' } } })
+    mockedAxios.isAxiosError.mockReturnValue(true)
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.type(screen.getByPlaceholderText(/write a reply/i), 'Test reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/failed to send reply/i)
+  })
+
+  it('shows a fallback error for non-axios errors', async () => {
+    mockedAxios.post.mockRejectedValue(new Error('Network failure'))
+    mockedAxios.isAxiosError.mockReturnValue(false)
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    await user.type(screen.getByPlaceholderText(/write a reply/i), 'Test reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/failed to send reply/i)
+  })
+
+  it('keeps the textarea populated after a failed submission', async () => {
+    mockedAxios.post.mockRejectedValue(new Error('Server error'))
+    mockedAxios.isAxiosError.mockReturnValue(false)
+    const user = userEvent.setup()
+    renderWithProviders(<TicketDetailPage />)
+    await screen.findByText('Login issue')
+    const textarea = screen.getByPlaceholderText(/write a reply/i)
+    await user.type(textarea, 'Test reply')
+    await user.click(screen.getByRole('button', { name: /send reply/i }))
+    await screen.findByRole('alert')
+    expect(textarea).toHaveValue('Test reply')
   })
 })
