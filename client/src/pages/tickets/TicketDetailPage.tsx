@@ -21,6 +21,7 @@ import { TicketControls } from './TicketControls'
 import { TicketDetailSkeleton } from './TicketDetailSkeleton'
 import { BackLink } from '@/components/BackLink'
 import { ErrorAlert } from '@/components/ErrorAlert'
+import { EmptyState } from '@/components/EmptyState'
 
 function ReplyForm({ ticketId }: { ticketId: number }) {
   const queryClient = useQueryClient()
@@ -135,7 +136,7 @@ export default function TicketDetailPage() {
       <BackLink to="/tickets" label="Tickets" />
 
       {isError || !ticket ? (
-        <p className="text-sm text-muted-foreground">Ticket not found.</p>
+        <EmptyState message="Ticket not found." />
       ) : (
         <div className="flex gap-8 items-start">
           {/* ── Left: subject + message thread ── */}

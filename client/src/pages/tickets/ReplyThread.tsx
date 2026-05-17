@@ -1,5 +1,6 @@
 import { cn, formatDateTime } from '@/lib/utils'
 import { type Message } from './tickets.types'
+import { EmptyState } from '@/components/EmptyState'
 
 function getInitials(name: string): string {
   return name
@@ -76,7 +77,7 @@ function MessageBubble({ message }: { message: Message }) {
 export function ReplyThread({ messages }: { messages: Message[] }) {
   if (messages.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-10">No messages yet.</p>
+      <EmptyState message="No messages yet." className="text-center py-10" />
     )
   }
 

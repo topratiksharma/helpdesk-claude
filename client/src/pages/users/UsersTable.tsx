@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatDate } from '@/lib/utils'
+import { EmptyState } from '@/components/EmptyState'
 
 interface UsersTableProps {
   users: User[]
@@ -55,9 +56,7 @@ export function UsersTable({ users, loading, currentUserId, onDelete, onEdit }: 
 
   if (users.length === 0) {
     return (
-      <div className="text-center py-16 text-sm text-muted-foreground">
-        No users yet. Add one to get started.
-      </div>
+      <EmptyState message="No users yet. Add one to get started." className="text-center py-16" />
     )
   }
 

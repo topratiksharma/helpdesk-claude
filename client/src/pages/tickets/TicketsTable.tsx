@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table'
 import { CATEGORY_LABELS, STATUS_STYLES } from '@/lib/constants'
 import { cn, formatDate } from '@/lib/utils'
+import { EmptyState } from '@/components/EmptyState'
 
 interface TicketsTableProps {
   tickets: TicketListItem[]
@@ -186,9 +187,7 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
 
   if (tickets.length === 0) {
     return (
-      <div className="text-center py-16 text-sm text-muted-foreground">
-        No tickets yet.
-      </div>
+      <EmptyState message="No tickets yet." className="text-center py-16" />
     )
   }
 
