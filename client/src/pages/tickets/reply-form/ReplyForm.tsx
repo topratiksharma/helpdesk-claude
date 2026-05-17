@@ -9,6 +9,9 @@ import { Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
 import { type CreateMessageInput, type MessageSender, createMessageSchema } from '../tickets.types'
 import { ErrorAlert } from '@/components/ErrorAlert'
+import { cn } from '@/lib/utils'
+
+const MAX_REPLY_CHARS = 2000
 
 export function ReplyForm({ ticketId }: { ticketId: number }) {
   const queryClient = useQueryClient()
@@ -22,12 +25,15 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
     handleSubmit,
     setValue,
     reset,
+    watch,
     setError,
     formState: { errors },
   } = useForm<CreateMessageInput>({
     resolver: zodResolver(createMessageSchema),
     defaultValues: { body: '', sender },
   })
+
+  const body = watch('body') ?? ''
 
   useEffect(() => {
     setValue('sender', sender)
@@ -65,9 +71,19 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
           aria-invalid={!!errors.body}
           {...register('body')}
         />
-        {errors.body && (
-          <span className="text-xs text-destructive">{errors.body.message}</span>
-        )}
+        <div className="flex items-center justify-between">
+          {errors.body ? (
+            <span className="text-xs text-destructive">{errors.body.message}</span>
+          ) : (
+            <span />
+          )}
+          <span className={cn(
+            'text-xs tabular-nums',
+            body.length > MAX_REPLY_CHARS * 0.9 ? 'text-destructive' : 'text-muted-foreground',
+          )}>
+            {body.length} / {MAX_REPLY_CHARS}
+          </span>
+        </div>
       </div>
 
       {errors.root && (
@@ -75,7 +91,7 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
       )}
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={replyMutation.isPending} size="sm">
+        <Button type="submit" disabled={replyMutation.isPending || !body.trim()} size="sm">
           {replyMutation.isPending ? 'Sending…' : 'Send reply'}
         </Button>
       </div>

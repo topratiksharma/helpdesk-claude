@@ -58,7 +58,7 @@ export default function TicketsPage() {
 
   return (
     <div className="animate-fade-up">
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h1 className="font-display text-[32px] font-medium text-foreground tracking-[-0.02em] leading-[1.2] mb-1.5">
             Tickets

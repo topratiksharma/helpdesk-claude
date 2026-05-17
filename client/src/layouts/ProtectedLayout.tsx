@@ -32,7 +32,7 @@ export default function ProtectedLayout() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main className="max-w-[1200px] mx-auto px-6 py-10">
+      <main className="max-w-[1200px] mx-auto px-6 py-6">
         <Outlet />
       </main>
     </div>
