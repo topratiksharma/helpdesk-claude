@@ -1,5 +1,5 @@
 import { cn, formatDateTime } from '@/lib/utils'
-import { type Message } from './tickets.types'
+import { type Message } from '../tickets.types'
 import { EmptyState } from '@/components/EmptyState'
 
 function getInitials(name: string): string {

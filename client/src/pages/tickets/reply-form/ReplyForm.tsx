@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
-import { type CreateMessageInput, type MessageSender, createMessageSchema } from './tickets.types'
+import { type CreateMessageInput, type MessageSender, createMessageSchema } from '../tickets.types'
 import { ErrorAlert } from '@/components/ErrorAlert'
 
 export function ReplyForm({ ticketId }: { ticketId: number }) {

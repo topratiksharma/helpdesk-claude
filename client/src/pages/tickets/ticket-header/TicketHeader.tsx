@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { STATUS_STYLES } from '@/lib/constants'
-import type { TicketStatus } from './tickets.types'
+import type { TicketStatus } from '../tickets.types'
 
 interface TicketHeaderProps {
   id: number

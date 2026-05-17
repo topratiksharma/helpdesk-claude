@@ -4,9 +4,9 @@ import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { useSession } from '@/lib/auth-client'
-import TicketDetailPage from './TicketDetailPage'
+import TicketDetailPage from '../ticket-details/TicketDetailPage'
 import { renderWithProviders } from '@/test/utils'
-import type { TicketDetailResponse } from './tickets.types'
+import type { TicketDetailResponse } from '../tickets.types'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -178,7 +178,7 @@ function setupAdminGet(ticketResponse = unassignedTicket) {
 describe('TicketDetailPage — loading state', () => {
   beforeEach(() => {
     mockedUseSession.mockReturnValue(adminSession as ReturnType<typeof useSession>)
-    mockedAxios.get.mockReturnValue(new Promise(() => {}))
+    mockedAxios.get.mockReturnValue(new Promise(() => { }))
   })
 
   it('does not render ticket content while loading', () => {

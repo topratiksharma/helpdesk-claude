@@ -9,7 +9,7 @@ import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import UsersPage from './pages/users/UsersPage'
 import TicketsPage from './pages/tickets/TicketsPage'
-import TicketDetailPage from './pages/tickets/TicketDetailPage'
+import TicketDetailPage from './pages/tickets/ticket-details/TicketDetailPage'
 import ProtectedLayout from './layouts/ProtectedLayout'
 import AdminLayout from './layouts/AdminLayout'
 

@@ -8,7 +8,7 @@ import {
   type SortOrder,
   type TicketFilterState,
 } from './tickets.types'
-import { TicketsTable } from './TicketsTable'
+import { TicketsTable } from './ticket-table/TicketsTable'
 import { TicketFilters } from './TicketFilters'
 import { TicketPagination } from './TicketPagination'
 import { ErrorAlert } from '@/components/ErrorAlert'

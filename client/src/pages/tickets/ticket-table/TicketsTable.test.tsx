@@ -6,7 +6,7 @@ vi.mock('react-router', () => ({
   useNavigate: () => vi.fn(),
 }))
 import { renderWithProviders } from '@/test/utils'
-import { type TicketListItem } from './tickets.types'
+import { type TicketListItem } from '../tickets.types'
 
 const mockTickets: TicketListItem[] = [
   {
@@ -56,7 +56,7 @@ function renderTable(overrides: Partial<Parameters<typeof TicketsTable>[0]> = {}
       tickets={mockTickets}
       loading={false}
       sorting={[]}
-      onSortingChange={() => {}}
+      onSortingChange={() => { }}
       {...overrides}
     />,
   )

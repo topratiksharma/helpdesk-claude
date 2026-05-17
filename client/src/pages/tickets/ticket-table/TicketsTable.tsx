@@ -8,8 +8,8 @@ import {
 } from '@tanstack/react-table'
 import { useNavigate } from 'react-router'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
-import { type TicketListItem, type TicketCategory } from './tickets.types'
-import type { TicketStatus } from './tickets.types'
+import { type TicketListItem, type TicketCategory } from '../tickets.types'
+import type { TicketStatus } from '../tickets.types'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {

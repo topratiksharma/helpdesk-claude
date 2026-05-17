@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { screen } from '@testing-library/react'
 import { ReplyThread } from './ReplyThread'
 import { renderWithProviders } from '@/test/utils'
-import type { Message } from './tickets.types'
+import type { Message } from '../tickets.types'
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { formatDateTime } from '@/lib/utils'
 import { CATEGORY_LABELS, STATUS_LABELS } from '@/lib/constants'
-import type { TicketDetail, TicketStatus, TicketCategory, AgentListItem } from './tickets.types'
+import type { TicketDetail, TicketStatus, TicketCategory, AgentListItem } from '../tickets.types'
 
 interface TicketControlsProps {
   ticketId: string
