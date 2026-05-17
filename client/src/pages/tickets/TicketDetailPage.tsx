@@ -1,10 +1,14 @@
 import axios from 'axios'
-import { type ElementType } from 'react'
+import { type ElementType, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, User, Tag, UserCheck, Calendar, Circle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -12,86 +16,95 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn, formatDate, formatDateTime } from '@/lib/utils'
+import { cn, formatDateTime } from '@/lib/utils'
 import { CATEGORY_LABELS, STATUS_LABELS, STATUS_STYLES, Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
 import {
   type TicketDetailResponse,
-  type Message,
   type AgentsResponse,
   type TicketCategory,
   type TicketStatus,
+  type CreateMessageInput,
+  type MessageSender,
+  createMessageSchema,
 } from './tickets.types'
+import { ReplyThread } from './ReplyThread'
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('')
-}
+function ReplyForm({ ticketId }: { ticketId: number }) {
+  const queryClient = useQueryClient()
+  const { data: session } = useSession()
 
-function getDayLabel(iso: string): string {
-  const d = new Date(iso)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-  if (d.toDateString() === today.toDateString()) return 'Today'
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(d)
-}
+  const role = session?.user?.role
+  const sender: MessageSender = role === Role.admin || role === Role.agent ? 'agent' : 'customer'
 
-function DaySeparator({ label }: { label: string }) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    setError,
+    formState: { errors },
+  } = useForm<CreateMessageInput>({
+    resolver: zodResolver(createMessageSchema),
+    defaultValues: { body: '', sender },
+  })
+
+  useEffect(() => {
+    setValue('sender', sender)
+  }, [sender, setValue])
+
+  const replyMutation = useMutation({
+    mutationFn: (values: CreateMessageInput) =>
+      axios.post(`/api/tickets/${ticketId}/messages`, values, { withCredentials: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', String(ticketId)] })
+      reset({ body: '', sender })
+    },
+    onError: (err) => {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.error ?? 'Failed to send reply.')
+        : 'Failed to send reply.'
+      setError('root', { message })
+    },
+  })
+
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="flex-1 h-px bg-border" />
-      <span className="text-[11px] text-muted-foreground/60 uppercase tracking-[0.08em] font-medium">
-        {label}
+    <form
+      onSubmit={handleSubmit((values) => replyMutation.mutate(values))}
+      noValidate
+      className="mt-6 pt-6 border-t border-border flex flex-col gap-3"
+    >
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-[0.06em]">
+        Reply
       </span>
-      <div className="flex-1 h-px bg-border" />
-    </div>
-  )
-}
 
-function MessageBubble({ message }: { message: Message }) {
-  const isAgent = message.sender === 'agent'
-  const name = isAgent ? (message.author?.name ?? 'Agent') : 'Customer'
-
-  return (
-    <div className={cn('flex gap-3', isAgent ? 'flex-row-reverse' : 'flex-row')}>
-      <div
-        className={cn(
-          'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5 select-none',
-          isAgent
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-muted-foreground border border-border',
+      <div className="flex flex-col gap-1">
+        <Textarea
+          placeholder="Write a reply…"
+          rows={4}
+          aria-invalid={!!errors.body}
+          {...register('body')}
+        />
+        {errors.body && (
+          <span className="text-xs text-destructive">{errors.body.message}</span>
         )}
-      >
-        {getInitials(name)}
       </div>
-      <div className={cn('flex flex-col gap-1 max-w-[74%]', isAgent && 'items-end')}>
-        <div className={cn('flex items-baseline gap-2', isAgent && 'flex-row-reverse')}>
-          <span className="text-xs font-medium text-foreground">{name}</span>
-          <span className="text-[11px] text-muted-foreground/60">
-            {formatDateTime(message.createdAt)}
-          </span>
-        </div>
+
+      {errors.root && (
         <div
-          className={cn(
-            'px-3.5 py-2.5 text-sm leading-relaxed',
-            isAgent
-              ? 'bg-primary text-primary-foreground rounded-xl rounded-tr-sm'
-              : 'bg-muted/60 border border-border text-foreground rounded-xl rounded-tl-sm',
-          )}
+          role="alert"
+          className="bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive"
         >
-          {message.body}
+          {errors.root.message}
         </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button type="submit" disabled={replyMutation.isPending} size="sm">
+          {replyMutation.isPending ? 'Sending…' : 'Send reply'}
+        </Button>
       </div>
-    </div>
+    </form>
   )
 }
 
@@ -229,17 +242,6 @@ export default function TicketDetailPage() {
     )
   }
 
-  const messagesByDay: { dayKey: string; dayLabel: string; messages: Message[] }[] = []
-  for (const msg of ticket.messages) {
-    const dayKey = new Date(msg.createdAt).toDateString()
-    const last = messagesByDay[messagesByDay.length - 1]
-    if (last && last.dayKey === dayKey) {
-      last.messages.push(msg)
-    } else {
-      messagesByDay.push({ dayKey, dayLabel: getDayLabel(msg.createdAt), messages: [msg] })
-    }
-  }
-
   return (
     <div className="animate-fade-up max-w-5xl mx-auto">
       <button
@@ -267,20 +269,9 @@ export default function TicketDetailPage() {
             </h1>
           </div>
 
-          <div className="space-y-4">
-            {ticket.messages.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No messages yet.</p>
-            ) : (
-              messagesByDay.map(({ dayKey, dayLabel, messages }) => (
-                <div key={dayKey} className="space-y-4">
-                  <DaySeparator label={dayLabel} />
-                  {messages.map((msg) => (
-                    <MessageBubble key={msg.id} message={msg} />
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
+          <ReplyThread messages={ticket.messages} />
+
+          <ReplyForm ticketId={ticket.id} />
         </div>
 
         {/* ── Right: metadata sidebar ── */}

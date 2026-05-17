@@ -1,5 +1,5 @@
-export type { Ticket, TicketStatus, TicketCategory, CreateTicketInput, AgentListItem, AgentsResponse } from '@helpdesk/core'
-export { TicketStatusEnum, TicketCategoryEnum } from '@helpdesk/core'
+export type { Ticket, TicketStatus, TicketCategory, CreateTicketInput, AgentListItem, AgentsResponse, CreateMessageInput, MessageSender } from '@helpdesk/core'
+export { TicketStatusEnum, TicketCategoryEnum, createMessageSchema, MessageSenderEnum } from '@helpdesk/core'
 
 import type { Ticket, TicketStatus, TicketCategory } from '@helpdesk/core'
 
