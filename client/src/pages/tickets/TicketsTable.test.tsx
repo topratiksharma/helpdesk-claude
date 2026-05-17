@@ -133,7 +133,7 @@ describe('TicketsTable — loaded state', () => {
 
   it('renders human-readable category labels', () => {
     renderTable()
-    expect(screen.getByText('Technical Questions')).toBeInTheDocument()
+    expect(screen.getByText('Technical')).toBeInTheDocument()
     expect(screen.getByText('Refund')).toBeInTheDocument()
   })
 

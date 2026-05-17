@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -25,6 +26,8 @@ vi.mock('@/lib/auth-client', () => ({
 vi.mock('react-router', () => ({
   useParams: () => ({ id: '1' }),
   useNavigate: () => vi.fn(),
+  Link: ({ children, ...props }: { children: React.ReactNode; to: string }) =>
+    React.createElement('a', props, children),
 }))
 
 // Replace shadcn/ui Select with native <select> so jsdom can interact with it.
@@ -374,8 +377,8 @@ describe('TicketDetailPage — category update (admin)', () => {
     await screen.findByText('Login issue')
     const select = screen.getByRole('combobox', { name: 'Ticket category' })
     expect(within(select).getByRole('option', { name: 'No category' })).toBeInTheDocument()
-    expect(within(select).getByRole('option', { name: 'General Questions' })).toBeInTheDocument()
-    expect(within(select).getByRole('option', { name: 'Technical Questions' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'General' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Technical' })).toBeInTheDocument()
     expect(within(select).getByRole('option', { name: 'Refund' })).toBeInTheDocument()
   })
 
@@ -520,7 +523,7 @@ describe('TicketDetailPage — category update (non-admin)', () => {
     mockedAxios.get.mockResolvedValue({ data: categorisedTicket })
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    expect(screen.getByText('Technical Questions')).toBeInTheDocument()
+    expect(screen.getByText('Technical')).toBeInTheDocument()
   })
 })
 
