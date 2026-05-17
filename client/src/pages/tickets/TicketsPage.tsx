@@ -10,7 +10,7 @@ import {
 } from './tickets.types'
 import { TicketsTable } from './ticket-table/TicketsTable'
 import { TicketFilters } from './TicketFilters'
-import { TicketPagination } from './TicketPagination'
+import { PaginationControl } from '@/components/PaginationControl'
 import { ErrorAlert } from '@/components/ErrorAlert'
 
 const LIMIT = 10;
@@ -84,7 +84,7 @@ export default function TicketsPage() {
         onSortingChange={handleSortingChange}
       />
 
-      <TicketPagination
+      <PaginationControl
         page={page}
         total={data?.total ?? 0}
         limit={LIMIT}

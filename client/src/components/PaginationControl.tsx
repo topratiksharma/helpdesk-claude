@@ -8,7 +8,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 
-interface TicketPaginationProps {
+interface PaginationControlProps {
   page: number
   total: number
   limit: number
@@ -28,7 +28,7 @@ function getPageRange(page: number, totalPages: number): (number | '…')[] {
   return [1, '…', page - 1, page, page + 1, '…', totalPages]
 }
 
-export function TicketPagination({ page, total, limit, onPageChange }: TicketPaginationProps) {
+export function PaginationControl({ page, total, limit, onPageChange }: PaginationControlProps) {
   const totalPages = Math.ceil(total / limit)
 
   if (totalPages <= 1) return null
