@@ -9,3 +9,13 @@ export function validate<T>(schema: ZodType<T>, body: unknown, res: Response): T
   }
   return result.data;
 }
+
+export function parseIntParam(param: string | string[] | undefined, res: Response): number | null {
+  const raw = Array.isArray(param) ? param[0] : param;
+  const id = parseInt(raw as string, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID." });
+    return null;
+  }
+  return id;
+}

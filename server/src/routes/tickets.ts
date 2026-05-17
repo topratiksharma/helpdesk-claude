@@ -6,7 +6,7 @@ import {
   type TicketSortField,
 } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
-import { validate } from "../lib/validate";
+import { validate, parseIntParam } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { requireAdmin } from "../middleware/require-admin";
 import { MessageSender, Prisma } from "../generated/prisma";
@@ -93,11 +93,8 @@ ticketsRouter.post("/", requireAuth, async (req, res) => {
 });
 
 ticketsRouter.get("/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid ticket ID." });
-    return;
-  }
+  const id = parseIntParam(req.params.id, res);
+  if (id === null) return;
 
   const ticket = await prisma.ticket.findUnique({
     where: { id },
@@ -121,11 +118,8 @@ ticketsRouter.get("/:id", requireAuth, async (req, res) => {
 });
 
 ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
-  const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid ticket ID." });
-    return;
-  }
+  const id = parseIntParam(req.params.id, res);
+  if (id === null) return;
 
   const data = validate(updateTicketSchema, req.body, res);
   if (!data) return;
@@ -164,11 +158,8 @@ ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
 });
 
 ticketsRouter.delete("/:id", requireAdmin, async (req, res) => {
-  const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid ticket ID." });
-    return;
-  }
+  const id = parseIntParam(req.params.id, res);
+  if (id === null) return;
 
   const existing = await prisma.ticket.findUnique({ where: { id } });
   if (!existing) {
