@@ -7,6 +7,7 @@ import { UserForm } from './UserForm'
 import { UsersTable } from './UsersTable'
 import { useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
+import { ErrorAlert } from '@/components/ErrorAlert'
 import {
   Dialog,
   DialogContent,
@@ -76,12 +77,7 @@ export default function UsersPage() {
       </div>
 
       {error && (
-        <div
-          role="alert"
-          className="mb-6 bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive"
-        >
-          {error}
-        </div>
+        <ErrorAlert className="mb-6" message={error} />
       )}
 
       <UsersTable

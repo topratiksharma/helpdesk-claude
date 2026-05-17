@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { loginSchema, type LoginInput } from '@helpdesk/core'
+import { ErrorAlert } from '@/components/ErrorAlert'
 
 type LoginFormValues = LoginInput
 
@@ -142,17 +143,7 @@ export default function LoginPage() {
               </div>
 
               {errors.root && (
-                <div
-                  role="alert"
-                  className="bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive flex items-center gap-2"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-                    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M7 4v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    <circle cx="7" cy="10" r="0.75" fill="currentColor" />
-                  </svg>
-                  {errors.root.message}
-                </div>
+                <ErrorAlert message={errors.root.message!} />
               )}
 
               <Button

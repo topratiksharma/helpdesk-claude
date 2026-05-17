@@ -11,6 +11,7 @@ import {
 import { TicketsTable } from './TicketsTable'
 import { TicketFilters } from './TicketFilters'
 import { TicketPagination } from './TicketPagination'
+import { ErrorAlert } from '@/components/ErrorAlert'
 
 const LIMIT = 10;
 
@@ -73,12 +74,7 @@ export default function TicketsPage() {
       </div>
 
       {isError && (
-        <div
-          role="alert"
-          className="mb-6 bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive"
-        >
-          Could not load tickets. Please try again.
-        </div>
+        <ErrorAlert className="mb-6" message="Could not load tickets. Please try again." />
       )}
 
       <TicketsTable

@@ -29,6 +29,7 @@ import {
   createMessageSchema,
 } from './tickets.types'
 import { ReplyThread } from './ReplyThread'
+import { ErrorAlert } from '@/components/ErrorAlert'
 
 function ReplyForm({ ticketId }: { ticketId: number }) {
   const queryClient = useQueryClient()
@@ -91,12 +92,7 @@ function ReplyForm({ ticketId }: { ticketId: number }) {
       </div>
 
       {errors.root && (
-        <div
-          role="alert"
-          className="bg-destructive/10 border border-destructive/20 rounded-sm px-3.5 py-2.5 text-[13px] text-destructive"
-        >
-          {errors.root.message}
-        </div>
+        <ErrorAlert message={errors.root.message!} />
       )}
 
       <div className="flex justify-end">
