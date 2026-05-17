@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, User, Tag, UserCheck, Calendar, Circle } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn, formatDateTime } from '@/lib/utils'
-import { CATEGORY_LABELS, STATUS_LABELS, STATUS_STYLES, Role } from '@/lib/constants'
+import { CATEGORY_LABELS, STATUS_LABELS, Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
 import {
   type TicketDetailResponse,
@@ -29,6 +28,7 @@ import {
   createMessageSchema,
 } from './tickets.types'
 import { ReplyThread } from './ReplyThread'
+import { TicketHeader } from './TicketHeader'
 import { ErrorAlert } from '@/components/ErrorAlert'
 
 function ReplyForm({ ticketId }: { ticketId: number }) {
@@ -251,19 +251,7 @@ export default function TicketDetailPage() {
       <div className="flex gap-8 items-start">
         {/* ── Left: subject + message thread ── */}
         <div className="flex-1 min-w-0">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="font-mono text-xs text-muted-foreground/60 tracking-wide">
-                #{ticket.id}
-              </span>
-              <Badge variant="outline" className={STATUS_STYLES[ticket.status]}>
-                {ticket.status}
-              </Badge>
-            </div>
-            <h1 className="font-display text-[28px] font-medium text-foreground tracking-[-0.02em] leading-[1.2]">
-              {ticket.subject}
-            </h1>
-          </div>
+          <TicketHeader id={ticket.id} subject={ticket.subject} status={ticket.status} />
 
           <ReplyThread messages={ticket.messages} />
 
