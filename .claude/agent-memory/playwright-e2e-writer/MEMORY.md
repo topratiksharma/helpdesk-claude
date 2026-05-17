@@ -6,3 +6,4 @@
 - [Agent user helper](ref_agent_user_helper.md) — e2e/helpers/create-user.ts, createTestUser/deleteTestUser, beforeAll/afterAll pattern
 - [Users page selectors](ref_users_page_selectors.md) — Add/Edit/Delete dialog locators, validation messages, fixture patterns for CRUD tests
 - [Webhook API test patterns](ref_webhook_api_tests.md) — API-level tests for inbound email webhook: auth, threading, idempotency, reopen, validation
+- [Ticket detail page selectors](ref_ticket_detail_selectors.md) — reply form placeholder/button, status combobox aria-label, option names, create-ticket helper shape
