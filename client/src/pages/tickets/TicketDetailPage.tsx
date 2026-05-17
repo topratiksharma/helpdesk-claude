@@ -1,10 +1,9 @@
 import axios from 'axios'
 import { useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useParams } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Role } from '@/lib/constants'
@@ -20,6 +19,7 @@ import { ReplyThread } from './ReplyThread'
 import { TicketHeader } from './TicketHeader'
 import { TicketControls } from './TicketControls'
 import { TicketDetailSkeleton } from './TicketDetailSkeleton'
+import { BackLink } from '@/components/BackLink'
 import { ErrorAlert } from '@/components/ErrorAlert'
 
 function ReplyForm({ ticketId }: { ticketId: number }) {
@@ -98,7 +98,6 @@ function ReplyForm({ ticketId }: { ticketId: number }) {
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { data: session } = useSession()
   const isAdmin = session?.user.role === Role.admin
 
@@ -131,44 +130,27 @@ export default function TicketDetailPage() {
     return <TicketDetailSkeleton />
   }
 
-  if (isError || !ticket) {
-    return (
-      <div className="animate-fade-up max-w-5xl mx-auto">
-        <button
-          onClick={() => navigate('/tickets')}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft size={13} />
-          Tickets
-        </button>
-        <p className="text-sm text-muted-foreground">Ticket not found.</p>
-      </div>
-    )
-  }
-
   return (
     <div className="animate-fade-up max-w-5xl mx-auto">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-      >
-        <ArrowLeft size={13} />
-        Tickets
-      </button>
+      <BackLink to="/tickets" label="Tickets" />
 
-      <div className="flex gap-8 items-start">
-        {/* ── Left: subject + message thread ── */}
-        <div className="flex-1 min-w-0">
-          <TicketHeader id={ticket.id} subject={ticket.subject} status={ticket.status} />
+      {isError || !ticket ? (
+        <p className="text-sm text-muted-foreground">Ticket not found.</p>
+      ) : (
+        <div className="flex gap-8 items-start">
+          {/* ── Left: subject + message thread ── */}
+          <div className="flex-1 min-w-0">
+            <TicketHeader id={ticket.id} subject={ticket.subject} status={ticket.status} />
 
-          <ReplyThread messages={ticket.messages} />
+            <ReplyThread messages={ticket.messages} />
 
-          <ReplyForm ticketId={ticket.id} />
+            <ReplyForm ticketId={ticket.id} />
+          </div>
+
+          {/* ── Right: controls ── */}
+          <TicketControls ticketId={id!} ticket={ticket} isAdmin={isAdmin} agents={agents} />
         </div>
-
-        {/* ── Right: metadata sidebar ── */}
-        <TicketControls ticketId={id!} ticket={ticket} isAdmin={isAdmin} agents={agents} />
-      </div>
+      )}
     </div>
   )
 }
