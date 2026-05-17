@@ -1,3 +1,4 @@
 export * from './schemas/users'
 export * from './schemas/tickets'
 export * from './schemas/email'
+export * from './schemas/messages'
