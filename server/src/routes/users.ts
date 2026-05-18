@@ -147,6 +147,10 @@ usersRouter.delete("/:id", requireAdmin, async (req, res) => {
       data: { deletedAt: new Date(), updatedAt: new Date() },
     }),
     prisma.session.deleteMany({ where: { userId: id } }),
+    prisma.ticket.updateMany({
+      where: { assignedToId: id },
+      data: { assignedToId: null },
+    }),
   ]);
   res.status(204).send();
 });
