@@ -59,7 +59,7 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
   const refineMutation = useMutation({
     mutationFn: (currentBody: string) =>
       axios
-        .post<RefineReplyResponse>('/api/tickets/refine', { body: currentBody }, { withCredentials: true })
+        .post<RefineReplyResponse>('/api/tickets/refine', { body: currentBody, ticketId }, { withCredentials: true })
         .then((r) => r.data),
     onSuccess: ({ refined }) => {
       setValue('body', refined, { shouldValidate: true })

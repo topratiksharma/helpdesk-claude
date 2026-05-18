@@ -13,6 +13,7 @@ export type CreateMessageInput = z.infer<typeof createMessageSchema>;
 
 export const refineReplySchema = z.object({
   body: z.string().trim().min(1).max(2000),
+  ticketId: z.number().int().positive(),
 })
 export type RefineReplyInput = z.infer<typeof refineReplySchema>
 
