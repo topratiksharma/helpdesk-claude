@@ -1,11 +1,33 @@
 import { Router } from "express";
-import { createMessageSchema } from "@helpdesk/core";
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { createMessageSchema, refineReplySchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { validate, parseIntParam } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { MessageSender } from "../generated/prisma";
 
 export const messagesRouter = Router({ mergeParams: true });
+
+messagesRouter.post("/refine", requireAuth, async (req, res) => {
+  const data = validate(refineReplySchema, req.body, res);
+  if (!data) return;
+
+  try {
+    const { text } = await generateText({
+      model: openai("gpt-4.1-nano"),
+      system:
+        "You are a professional customer support agent. Improve the clarity, tone, and professionalism of the reply while keeping its intent and length similar. Return only the improved reply text with no commentary.",
+      prompt: data.body,
+      maxRetries: 0,
+    });
+    res.json({ refined: text });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[messages/refine]", message);
+    res.status(502).json({ error: message });
+  }
+});
 
 messagesRouter.post("/:ticketId/messages", requireAuth, async (req, res) => {
   const ticketId = parseIntParam(req.params.ticketId, res);

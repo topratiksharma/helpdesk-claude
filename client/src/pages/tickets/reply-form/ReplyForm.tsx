@@ -3,11 +3,13 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Role } from '@/lib/constants'
 import { useSession } from '@/lib/auth-client'
 import { type CreateMessageInput, type MessageSender, createMessageSchema } from '../tickets.types'
+import { type RefineReplyResponse } from '@helpdesk/core'
 import { ErrorAlert } from '@/components/ErrorAlert'
 import { cn } from '@/lib/utils'
 
@@ -54,6 +56,22 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
     },
   })
 
+  const refineMutation = useMutation({
+    mutationFn: (currentBody: string) =>
+      axios
+        .post<RefineReplyResponse>('/api/tickets/refine', { body: currentBody }, { withCredentials: true })
+        .then((r) => r.data),
+    onSuccess: ({ refined }) => {
+      setValue('body', refined, { shouldValidate: true })
+    },
+    onError: (err) => {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.error ?? 'Failed to refine reply.')
+        : 'Failed to refine reply.'
+      setError('root', { message })
+    },
+  })
+
   return (
     <form
       onSubmit={handleSubmit((values) => replyMutation.mutate(values))}
@@ -90,7 +108,17 @@ export function ReplyForm({ ticketId }: { ticketId: number }) {
         <ErrorAlert message={errors.root.message!} />
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={refineMutation.isPending || !body.trim()}
+          onClick={() => refineMutation.mutate(body)}
+        >
+          <Wand2 size={14} strokeWidth={1.8} />
+          {refineMutation.isPending ? 'Refining…' : 'Refine'}
+        </Button>
         <Button type="submit" disabled={replyMutation.isPending || !body.trim()} size="sm">
           {replyMutation.isPending ? 'Sending…' : 'Send reply'}
         </Button>
