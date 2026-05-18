@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./env";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -12,6 +12,7 @@ import { agentsRouter } from "./routes/agents";
 import { ticketsRouter } from "./routes/tickets";
 import { messagesRouter } from "./routes/messages";
 import { statsRouter } from "./routes/stats";
+import { aiRouter } from "./routes/ai";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
 
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/agents", agentsRouter);
 app.use("/api/tickets", ticketsRouter);
 app.use("/api/tickets", messagesRouter);
 app.use("/api/stats", statsRouter);
+app.use("/api/ai", aiRouter);
 app.use("/api/webhooks/inbound-email", inboundEmailRouter);
 
 app.get("/api/me", requireAuth, (req, res) => {
