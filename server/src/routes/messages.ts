@@ -32,7 +32,7 @@ messagesRouter.post("/refine", requireAuth, async (req, res) => {
               reply while keeping its intent and length similar.
               Address the customer by their name "${customerName}" 
               and sign off with the agent's name "${agentName}".
-              Return only the improved reply text with no commentary.`,
+              Return only the improved reply text with no other output.`,
       prompt: data.body,
       maxRetries: 0,
     });
