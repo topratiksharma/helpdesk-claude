@@ -21,7 +21,7 @@ messagesRouter.post("/refine", requireAuth, async (req, res) => {
     return;
   }
 
-  const customerName = ticket.fromName;
+  const customerName = ticket.fromName.split(" ")[0];
   const agentName = req.user!.name;
 
   try {
