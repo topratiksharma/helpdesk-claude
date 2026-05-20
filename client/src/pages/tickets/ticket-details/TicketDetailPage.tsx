@@ -8,6 +8,7 @@ import { ReplyThread } from '../reply-thread/ReplyThread'
 import { ReplyForm } from '../reply-form/ReplyForm'
 import { TicketHeader } from '../ticket-header/TicketHeader'
 import { TicketControls } from '../ticket-controls/TicketControls'
+import { TicketSummary } from '../ticket-summary/TicketSummary'
 import { TicketDetailSkeleton } from '../TicketDetailSkeleton'
 import { BackLink } from '@/components/BackLink'
 import { EmptyState } from '@/components/EmptyState'
@@ -60,6 +61,8 @@ export default function TicketDetailPage() {
             <TicketHeader id={ticket.id} subject={ticket.subject} status={ticket.status} />
 
             <ReplyThread messages={ticket.messages} />
+
+            <TicketSummary ticketId={ticket.id} />
 
             <ReplyForm ticketId={ticket.id} />
           </div>

@@ -44,6 +44,47 @@ messagesRouter.post("/refine", requireAuth, async (req, res) => {
   }
 });
 
+messagesRouter.post("/:ticketId/summarize", requireAuth, async (req, res) => {
+  const ticketId = parseIntParam(req.params.ticketId, res);
+  if (ticketId === null) return;
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: {
+      messages: {
+        orderBy: { createdAt: "asc" },
+        include: { author: { select: { name: true } } },
+      },
+    },
+  });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found." });
+    return;
+  }
+
+  const thread = ticket.messages
+    .map((m) => {
+      const who =
+        m.sender === "agent" ? (m.author?.name ?? "Agent") : ticket.fromName;
+      return `${who}: ${m.body}`;
+    })
+    .join("\n\n");
+
+  try {
+    const { text } = await generateText({
+      model: openai("gpt-4.1-nano"),
+      system: `You are a customer support analyst. Summarize this support ticket conversation in 2-4 sentences. Cover: what the customer's issue is, what steps have been taken, and the current status. Be factual and concise. Return only the summary text.`,
+      prompt: `Subject: ${ticket.subject}\n\n${thread}`,
+      maxRetries: 0,
+    });
+    res.json({ summary: text });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[messages/summarize]", message);
+    res.status(502).json({ error: message });
+  }
+});
+
 messagesRouter.post("/:ticketId/messages", requireAuth, async (req, res) => {
   const ticketId = parseIntParam(req.params.ticketId, res);
   if (ticketId === null) return;

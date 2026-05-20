@@ -20,3 +20,7 @@ export type RefineReplyInput = z.infer<typeof refineReplySchema>
 export interface RefineReplyResponse {
   refined: string
 }
+
+export interface SummarizeTicketResponse {
+  summary: string
+}
