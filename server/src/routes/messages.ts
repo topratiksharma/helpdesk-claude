@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { createMessageSchema, refineReplySchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { validate, parseIntParam } from "../lib/validate";
@@ -26,7 +26,7 @@ messagesRouter.post("/refine", requireAuth, async (req, res) => {
 
   try {
     const { text } = await generateText({
-      model: openai("gpt-4.1-nano"),
+      model: groq("llama-3.3-70b"), // 2. Change model to Groq's free llama,
       system: `You are a professional customer support agent.
               Improve the clarity, tone, and professionalism of the 
               reply while keeping its intent and length similar.
@@ -72,7 +72,7 @@ messagesRouter.post("/:ticketId/summarize", requireAuth, async (req, res) => {
 
   try {
     const { text } = await generateText({
-      model: openai("gpt-4.1-nano"),
+      model: google("gemini-2.0-flash-lite"),
       system: `You are a customer support analyst. Summarize this support ticket conversation in 2-4 sentences. Cover: what the customer's issue is, what steps have been taken, and the current status. Be factual and concise. Return only the summary text.`,
       prompt: `Subject: ${ticket.subject}\n\n${thread}`,
       maxRetries: 0,
