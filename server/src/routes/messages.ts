@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { createMessageSchema, refineReplySchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
 import { validate, parseIntParam } from "../lib/validate";
@@ -9,7 +9,12 @@ import { MessageSender } from "../generated/prisma";
 
 export const messagesRouter = Router({ mergeParams: true });
 
-const model = google("gemini-2.0-flash-lite");
+const groq = createOpenAI({
+  baseURL: "https://api.groq.com/openai/v1",
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+const model = groq("llama-3.3-70b-versatile");
 
 messagesRouter.post("/refine", requireAuth, async (req, res) => {
   const data = validate(refineReplySchema, req.body, res);
