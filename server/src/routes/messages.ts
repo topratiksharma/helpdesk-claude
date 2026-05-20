@@ -9,6 +9,8 @@ import { MessageSender } from "../generated/prisma";
 
 export const messagesRouter = Router({ mergeParams: true });
 
+const model = google("gemini-2.0-flash-lite");
+
 messagesRouter.post("/refine", requireAuth, async (req, res) => {
   const data = validate(refineReplySchema, req.body, res);
   if (!data) return;
@@ -26,13 +28,11 @@ messagesRouter.post("/refine", requireAuth, async (req, res) => {
 
   try {
     const { text } = await generateText({
-      model: groq("llama-3.3-70b"), // 2. Change model to Groq's free llama,
+      model,
       system: `You are a professional customer support agent.
-              Improve the clarity, tone, and professionalism of the 
-              reply while keeping its intent and length similar.
-              Address the customer by their name "${customerName}" 
-              and sign off with the agent's name "${agentName}".
-              Return only the improved reply text with no other output.`,
+Improve the clarity, tone, and professionalism of the reply while keeping its intent and length similar.
+Address the customer by their name "${customerName}" and sign off with the agent's name "${agentName}".
+Return only the improved reply text with no other output.`,
       prompt: data.body,
       maxRetries: 0,
     });
@@ -72,7 +72,7 @@ messagesRouter.post("/:ticketId/summarize", requireAuth, async (req, res) => {
 
   try {
     const { text } = await generateText({
-      model: google("gemini-2.0-flash-lite"),
+      model,
       system: `You are a customer support analyst. Summarize this support ticket conversation in 2-4 sentences. Cover: what the customer's issue is, what steps have been taken, and the current status. Be factual and concise. Return only the summary text.`,
       prompt: `Subject: ${ticket.subject}\n\n${thread}`,
       maxRetries: 0,
