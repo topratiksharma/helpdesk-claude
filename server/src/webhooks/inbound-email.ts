@@ -116,7 +116,7 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
     });
 
     // Non-blocking: classify after the webhook response is returned
-    classifyTicket(newTicket.id, ticketData.subject, body ?? "").catch((err) => {
+    classifyTicket({ ...newTicket, body: body ?? "" }).catch((err) => {
       console.error("[classify-ticket] failed for ticket", newTicket.id, err);
     });
   }
