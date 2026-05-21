@@ -5,11 +5,14 @@ import { validate } from "../lib/validate";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
 
-function normalizeSubject(subject: string): string {
-  return subject.replace(/^(re|fwd?):\s*/i, "").trim().toLowerCase();
-}
-
 export const inboundEmailRouter = Router();
+
+function normalizeSubject(subject: string): string {
+  return subject
+    .replace(/^(re|fwd?):\s*/i, "")
+    .trim()
+    .toLowerCase();
+}
 
 inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
   const data = validate(inboundEmailSchema, req.body, res);
@@ -75,7 +78,9 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
         where: { id: ticket.id },
         data: {
           lastInboundEmailId: messageId,
-          ...(ticket.status === TicketStatus.resolved && { status: TicketStatus.open }),
+          ...(ticket.status === TicketStatus.resolved && {
+            status: TicketStatus.open,
+          }),
         },
       }),
     ]);
