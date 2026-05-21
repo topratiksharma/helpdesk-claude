@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
+import { classifyTicket } from "../lib/classify-ticket";
 
 export const inboundEmailRouter = Router();
 
@@ -93,8 +94,8 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       fromName,
     });
 
-    await prisma.$transaction(async (tx) => {
-      const newTicket = await tx.ticket.create({
+    const newTicket = await prisma.$transaction(async (tx) => {
+      const ticket = await tx.ticket.create({
         data: {
           subject: ticketData.subject,
           fromEmail: ticketData.fromEmail,
@@ -104,13 +105,19 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       });
       await tx.message.create({
         data: {
-          ticketId: newTicket.id,
+          ticketId: ticket.id,
           body: ticketData.body,
           htmlBody: html || null,
           sender: MessageSender.customer,
           emailMessageId: messageId,
         },
       });
+      return ticket;
+    });
+
+    // Non-blocking: classify after the webhook response is returned
+    classifyTicket(newTicket.id, ticketData.subject, body ?? "").catch((err) => {
+      console.error("[classify-ticket] failed for ticket", newTicket.id, err);
     });
   }
 
