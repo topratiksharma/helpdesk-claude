@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from 'react-router'
 import { signOut, useSession } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
-import { LogOut } from 'lucide-react'
+import { LogOut, Moon, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Role } from '@/lib/constants'
+import { useTheme } from '@/lib/theme'
 
 export default function Navbar() {
   const { data: session } = useSession()
@@ -62,6 +63,8 @@ export default function Navbar() {
             {user.name}
           </span>
 
+          <ThemeToggle />
+
           <div className="w-px h-4 bg-border" />
 
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -80,5 +83,39 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
     isActive
       ? 'bg-accent text-accent-foreground font-medium'
       : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+  )
+}
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme()
+  const isDark = theme === 'dark'
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggle}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="w-8 h-8 p-0"
+    >
+      <span className="relative w-4 h-4">
+        <Sun
+          size={14}
+          strokeWidth={1.8}
+          className={cn(
+            'absolute inset-0 transition-all duration-300',
+            isDark ? 'opacity-0 -rotate-90' : 'opacity-100 rotate-0'
+          )}
+        />
+        <Moon
+          size={14}
+          strokeWidth={1.8}
+          className={cn(
+            'absolute inset-0 transition-all duration-300',
+            isDark ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90'
+          )}
+        />
+      </span>
+    </Button>
   )
 }

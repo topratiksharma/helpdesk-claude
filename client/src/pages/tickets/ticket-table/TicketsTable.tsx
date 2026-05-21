@@ -201,7 +201,7 @@ export function TicketsTable({ tickets, loading, sorting, onSortingChange }: Tic
               key={row.id}
               className={cn(
                 'cursor-pointer hover:bg-muted/50 transition-colors',
-                row.original.status === 'open' && 'border-l-2 border-l-amber-400',
+                row.original.status === 'open' && 'border-l-2 border-l-amber-400 dark:border-l-amber-900',
               )}
               onClick={() => navigate(`/tickets/${row.original.id}`)}
             >

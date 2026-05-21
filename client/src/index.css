@@ -64,25 +64,29 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.02 155);
-  --foreground: oklch(0.97 0.005 80);
-  --card: oklch(0.17 0.02 155);
-  --card-foreground: oklch(0.97 0.005 80);
-  --popover: oklch(0.17 0.02 155);
-  --popover-foreground: oklch(0.97 0.005 80);
-  /* Lighter forest green for dark mode legibility */
-  --primary: oklch(0.60 0.10 155);
-  --primary-foreground: oklch(0.13 0.02 155);
-  --secondary: oklch(0.22 0.04 155);
-  --secondary-foreground: oklch(0.97 0.005 80);
-  --muted: oklch(0.22 0.02 155);
-  --muted-foreground: oklch(0.64 0.02 155);
-  --accent: oklch(0.22 0.06 155);
-  --accent-foreground: oklch(0.80 0.10 155);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.60 0.10 155);
+  --background: oklch(0.14 0.018 155);
+  /* Softer off-white — less glaring than near-pure white */
+  --foreground: oklch(0.90 0.006 80);
+  --card: oklch(0.18 0.018 155);
+  --card-foreground: oklch(0.90 0.006 80);
+  --popover: oklch(0.18 0.018 155);
+  --popover-foreground: oklch(0.90 0.006 80);
+  /* Muted forest green — less saturated, easier on the eyes */
+  --primary: oklch(0.54 0.075 155);
+  --primary-foreground: oklch(0.14 0.018 155);
+  --secondary: oklch(0.22 0.03 155);
+  --secondary-foreground: oklch(0.88 0.005 80);
+  --muted: oklch(0.21 0.018 155);
+  --muted-foreground: oklch(0.58 0.018 155);
+  --accent: oklch(0.22 0.04 155);
+  /* Accent foreground toned down — was 0.80 chroma 0.10, now softer */
+  --accent-foreground: oklch(0.72 0.07 155);
+  /* Softer destructive red */
+  --destructive: oklch(0.62 0.16 22);
+  /* Dark forest-tinted borders — replaces white-alpha that glowed */
+  --border: oklch(0.27 0.025 155);
+  --input: oklch(0.30 0.025 155);
+  --ring: oklch(0.54 0.075 155);
 }
 
 @keyframes fadeUp {
@@ -92,6 +96,7 @@
 
 * {
   box-sizing: border-box;
+  border-color: var(--border);
 }
 
 body {
