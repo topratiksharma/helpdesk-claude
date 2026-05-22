@@ -1,215 +1,120 @@
-# Helpdesk Claude — FAQ
+# Frequently Asked Questions
 
 ## Table of Contents
 
-- [General](#general)
-- [Setup & Configuration](#setup--configuration)
-- [Email Ingestion](#email-ingestion)
-- [Ticket Management](#ticket-management)
-- [AI Features](#ai-features)
-- [User & Role Management](#user--role-management)
-- [Background Jobs & Queue](#background-jobs--queue)
-- [Troubleshooting](#troubleshooting)
+- [Getting Help](#getting-help)
+- [Submitting a Request](#submitting-a-request)
+- [Tracking Your Request](#tracking-your-request)
+- [Refunds & Billing](#refunds--billing)
+- [Technical Issues](#technical-issues)
+- [Account & General Questions](#account--general-questions)
 
 ---
 
-## General
+## Getting Help
 
-**What is Helpdesk Claude?**
-An AI-powered support ticket system. Inbound customer emails are automatically converted into tickets, classified by topic, and surfaced to agents with AI-generated summaries and suggested replies.
+**How do I contact support?**
+Send an email to our support address. A ticket is created automatically and an agent will reply directly to your email — no account or login is needed.
 
-**Who are the intended users?**
-Two roles exist:
-- **Admin** — manages agents and users, has full access including ticket deletion.
-- **Agent** — handles the day-to-day ticket queue: reads, replies, and updates ticket status.
+**What types of issues can your support team help with?**
+- General questions about how the product works
+- Technical problems, errors, or bugs
+- Refund requests and billing disputes
+- Account-related questions
 
-**Can customers log in?**
-No. Customers interact only via email. The web application is for agents and admins.
+**What are your support hours?**
+Our team reviews tickets during business hours. You will receive an email reply once an agent has responded to your request.
 
----
-
-## Setup & Configuration
-
-**What are the required environment variables?**
-
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `PORT` | Server port (default `3000`) |
-| `BETTER_AUTH_SECRET` | 64-character hex secret for session signing |
-| `BETTER_AUTH_URL` | Auth base URL (e.g. `http://localhost:3000`) |
-| `TRUSTED_ORIGINS` | Comma-separated CORS origins (e.g. `http://localhost:5173`) |
-| `ADMIN_EMAIL` | Email for the initial admin account (seeded on first run) |
-| `ADMIN_PASSWORD` | Password for the initial admin account |
-| `INBOUND_WEBHOOK_TOKEN` | Secret token for authenticating inbound email webhooks |
-| `GROQ_API_KEY` | Groq API key for AI classification, summarisation, and reply refinement |
-
-Copy `server/.env.example` to `server/src/.env` and fill in every value before starting.
-
-**How do I run the application locally?**
-```bash
-# Start the API server (port 3000, hot-reload)
-bun run dev:server
-
-# Start the React client (port 5173, proxies /api to server)
-bun run dev:client
-```
-
-**How is the database initialised?**
-Run the Prisma migration and seed the admin account:
-```bash
-cd server
-bun run db:migrate   # applies Prisma migrations
-bun run db:seed      # creates the initial admin user
-```
-
-**Does pg-boss require its own database setup?**
-No. The background job queue manages its own `pgboss` schema automatically the first time the server starts — no extra migration step is needed.
+**How quickly will I get a response?**
+We aim to respond to all requests within one business day. Complex technical issues may take a little longer to investigate fully.
 
 ---
 
-## Email Ingestion
+## Submitting a Request
 
-**How do emails become tickets?**
-Your email provider (Postmark, SendGrid, etc.) is configured to forward inbound mail to:
-```
-POST /api/webhooks/inbound-email
-```
-The request must include the header `x-webhook-secret: <INBOUND_WEBHOOK_TOKEN>`.
+**How do I submit a support request?**
+Simply send an email to the support address. Your message is automatically logged as a support ticket — no web form or login required.
 
-**What fields does the webhook expect?**
+**What should I include in my message?**
+The more detail you provide, the faster we can help:
+- A clear description of the issue or question
+- Steps you already tried
+- Any error messages or screenshots if relevant
+- Your account email address or username, if applicable
 
-| Field | Required | Description |
-|---|---|---|
-| `from` | Yes | Sender email address |
-| `fromName` | Yes | Sender display name |
-| `subject` | Yes | Email subject |
-| `text` | No | Plain-text body |
-| `html` | No | HTML body |
-| `messageId` | Yes | Unique message ID (used for idempotency) |
-| `inReplyTo` | No | Message-ID of the email being replied to |
+**Can I submit multiple issues in one email?**
+It is best to send one email per issue. This keeps each request focused and ensures nothing is missed.
 
-**What happens if the same email is delivered twice?**
-Nothing — the webhook is idempotent. If a `messageId` has already been processed, the request returns `200 { ok: true }` immediately without creating a duplicate.
-
-**How does email threading work?**
-The system attempts to attach an incoming email to an existing ticket using three strategies in order:
-1. Match the `inReplyTo` header against a ticket's `lastInboundEmailId`.
-2. Match the `inReplyTo` header against any message's `emailMessageId`.
-3. Match the normalised subject line and sender email against an open or resolved ticket from the same customer.
-
-If no match is found, a new ticket is created.
-
-**Does a reply from the customer re-open a resolved ticket?**
-Yes. If an email is threaded into a ticket whose status is `resolved`, the ticket is automatically moved back to `open`.
+**What happens after I send my email?**
+You will typically receive a confirmation or reply from the support team directly to your email address. Keep an eye on the inbox you sent from.
 
 ---
 
-## Ticket Management
+## Tracking Your Request
 
-**What are the possible ticket statuses?**
-`open` → `resolved` → `closed`
+**How do I check the status of my request?**
+All communication happens via email. When an agent replies, you will receive their response directly in your inbox. Simply reply to that email if you have follow-up questions.
 
-Tickets start as `open`. Agents mark them `resolved` when handled. `closed` is a terminal state.
+**Can I follow up on an existing request?**
+Yes — just reply to the support email thread. Your reply will be automatically attached to your existing ticket so the agent has full context.
 
-**What categories can a ticket be assigned?**
+**Will my request be re-opened if I send a follow-up after it is resolved?**
+Yes. If you reply after your ticket has been marked resolved, it will automatically be re-opened and reviewed by the support team.
 
-| Category | Typical content |
-|---|---|
-| `general_questions` | Account queries, how-to questions, general enquiries |
-| `technical_questions` | Bugs, errors, integration issues |
-| `refund` | Billing disputes, cancellation requests, refund requests |
-
-Categories are set automatically by the AI classifier after a new ticket is created, and can be overridden manually by an agent at any time.
-
-**Can agents be assigned to tickets?**
-Yes. Any agent can be assigned to a ticket from the ticket detail view. Tickets can also be filtered by assignee from the ticket list.
-
-**Can tickets be deleted?**
-Only admins can permanently delete a ticket.
+**What if I don't hear back?**
+If you have not received a response within two business days, send a follow-up reply to your original email. Avoid sending a new email for the same issue, as it may create a separate ticket and slow things down.
 
 ---
 
-## AI Features
+## Refunds & Billing
 
-**Which AI model is used?**
-[Groq](https://groq.com) inference with `llama-3.3-70b-versatile`. The model is configured in `server/src/lib/ai.ts`.
+**How do I request a refund?**
+Send an email to support explaining the reason for your refund request. Include your order number or account email to help us locate your purchase quickly.
 
-**What AI features are available?**
+**How long does a refund take to process?**
+Refund timelines depend on your payment provider, but we aim to process approved requests within 3–5 business days. You will be notified by email once the refund has been initiated.
 
-| Feature | Where | What it does |
-|---|---|---|
-| Auto-classification | Background (on ticket creation) | Assigns one of three categories to a new ticket |
-| Ticket summary | Ticket detail page | Generates a 2–4 sentence summary of the full conversation |
-| Reply refinement | Reply form | Rewrites an agent's draft to improve clarity, tone, and professionalism |
+**I was charged incorrectly — what should I do?**
+Contact support with your account email and a description of the discrepancy. Include the charge amount and approximate date if possible, and we will investigate.
 
-**Is AI output applied automatically?**
-Classification is applied automatically in the background. Summaries and refined replies are suggestions — an agent must explicitly request them and can edit or discard the result before sending.
-
-**What happens if the AI returns an unexpected classification?**
-The job fails with an error. It will be retried up to **3 times** with exponential backoff (30 s → 60 s → 120 s). If all retries are exhausted the job is marked `failed` in the `pgboss.job` table and the ticket's category remains blank.
+**Can I cancel my subscription by email?**
+Yes. Email support with your cancellation request and account details. We will confirm once your subscription has been cancelled.
 
 ---
 
-## User & Role Management
+## Technical Issues
 
-**How is the first admin account created?**
-It is seeded by `bun run db:seed` using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` environment variables. Self-registration is disabled at the API level.
+**The product is not working as expected — what information should I include?**
+To help us diagnose the problem faster, please include:
+- A description of what you expected to happen vs. what actually happened
+- The steps that led to the issue
+- Any error messages shown on screen
+- The device and browser you are using (e.g. Chrome on Windows 11)
 
-**Can agents sign themselves up?**
-No. Only an admin can create agent accounts through the user management UI.
+**I am getting an error message — what should I do?**
+Copy or screenshot the full error message and send it to support along with the steps that triggered it. Do not just describe it in general terms — the exact wording helps significantly.
 
-**What happens to tickets when an agent is deleted?**
-Deletion is a soft-delete (`deletedAt` is set). The agent's assigned tickets are reassigned and their active sessions are cleared. The account is no longer visible in the UI but its data is retained for audit purposes.
+**The issue is intermittent and hard to reproduce — can you still help?**
+Yes. Note the approximate time it occurred and describe the pattern as best you can (e.g. "happens every time I log in on mobile but not on desktop"). The more context you provide, the better.
 
-**Can an admin demote themselves?**
-Admins can only be managed by other admins. An admin cannot remove their own role to prevent accidental lockout.
-
----
-
-## Background Jobs & Queue
-
-**What queue technology is used?**
-[pg-boss](https://github.com/timgit/pg-boss) — a PostgreSQL-backed job queue. No Redis or separate queue service is required.
-
-**Where are jobs stored?**
-In a `pgboss` schema inside the same PostgreSQL database. You can inspect jobs directly:
-```sql
-SELECT id, name, state, data, output, created_on
-FROM pgboss.job
-WHERE name = 'classify-ticket'
-ORDER BY created_on DESC;
-```
-
-**Are jobs durable across server restarts?**
-Yes. Jobs are persisted to PostgreSQL before the webhook response is sent. If the server crashes mid-classification, the job remains in the queue and is picked up on next start.
-
-**What are the retry settings for the classification job?**
-
-| Setting | Value |
-|---|---|
-| Retry limit | 3 attempts |
-| Retry delay | 30 seconds |
-| Backoff | Exponential (30 s → 60 s → 120 s) |
+**Is there a known issue affecting the service right now?**
+Reach out to support and ask — our team can confirm if there is an ongoing incident and provide an estimated resolution time.
 
 ---
 
-## Troubleshooting
+## Account & General Questions
 
-**The server fails to start with "Queue start timed out after 30s".**
-The server cannot reach PostgreSQL within 30 seconds. Check that `DATABASE_URL` is correct and the database is reachable from the server process.
+**I forgot my password — how do I reset it?**
+Contact support with the email address on your account. An agent will assist you with regaining access.
 
-**Tickets are being created but the `category` column stays blank.**
-The classification job is either still queued or has failed. Check the `pgboss.job` table (see query above) — the `state` column will be `failed` and `output` will contain the error message. Common causes: invalid `GROQ_API_KEY`, AI returning an unexpected category string, or a network timeout reaching the Groq API.
+**How do I update my email address or account details?**
+Email support with your current account email and the changes you need. We will update your details and confirm once done.
 
-**Inbound emails return `401 Unauthorized`.**
-The `x-webhook-secret` header value does not match `INBOUND_WEBHOOK_TOKEN`. Verify both are identical, with no leading/trailing whitespace.
+**I think my account has been compromised — what should I do?**
+Contact support immediately. Include your account email and a brief description of what you noticed. We will secure your account as a priority.
 
-**Reply refinement or summarisation returns an error.**
-Both features call the Groq API synchronously. Confirm `GROQ_API_KEY` is set and that the account has sufficient quota. Errors are returned as JSON with an `error` field.
+**How is my personal data handled?**
+Your name and email address are stored to manage your support requests. They are not shared with third parties. Contact support if you would like to request deletion of your data.
 
-**Login always fails, even with the correct credentials.**
-Rate limiting kicks in after 10 failed login attempts per 15-minute window. Wait for the window to expire, or restart the server to clear in-memory state. Verify `ADMIN_EMAIL` and `ADMIN_PASSWORD` match what was seeded.
-
-**The client shows CORS errors.**
-Add the client's origin (e.g. `http://localhost:5173`) to the `TRUSTED_ORIGINS` environment variable on the server and restart.
+**Can I request a copy of my support history?**
+Yes. Email support with your account email address and we will provide a summary of your previous requests.
