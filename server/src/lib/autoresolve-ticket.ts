@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { generateText } from "ai";
 import { model } from "./ai";
 import { prisma } from "./prisma";
@@ -16,7 +17,10 @@ export interface AutoresolveTicketPayload {
   fromName: string;
 }
 
-const faqContent = readFileSync(join(import.meta.dir, "../../../FAQ.md"), "utf-8");
+const faqContent = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "../../../FAQ.md"),
+  "utf-8",
+);
 
 const SYSTEM_PROMPT = `You are a professional customer support agent. Using ONLY the FAQ below, determine if the customer's question can be fully answered.
 

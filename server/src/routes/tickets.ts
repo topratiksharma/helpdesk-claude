@@ -31,7 +31,9 @@ ticketsRouter.get("/", requireAuth, async (req, res) => {
     sortOrder,
   } = query.data;
   const where: Prisma.TicketWhereInput = {
-    ...(status !== undefined && { status }),
+    ...(status !== undefined
+      ? { status }
+      : { status: { notIn: ["new", "processing"] } }),
     ...(category !== undefined && { category }),
     ...(assignedToId !== undefined && { assignedToId }),
     ...(search && {
