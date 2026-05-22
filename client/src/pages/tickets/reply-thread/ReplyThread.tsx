@@ -62,7 +62,7 @@ function MessageBubble({ message }: { message: Message }) {
         </div>
         <div
           className={cn(
-            'px-3.5 py-2.5 text-sm leading-relaxed',
+            'px-3.5 py-2.5 text-sm leading-relaxed [&_p]:mb-3 [&_p:last-child]:mb-0',
             isAgent
               ? 'bg-primary text-primary-foreground rounded-xl rounded-tr-sm'
               : 'bg-muted/60 border border-border text-foreground rounded-xl rounded-tl-sm',
