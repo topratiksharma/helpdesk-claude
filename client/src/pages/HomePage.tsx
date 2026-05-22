@@ -2,36 +2,60 @@ import axios from 'axios'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from '@/lib/auth-client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Inbox, CheckCircle2, LayoutGrid } from 'lucide-react'
+import { Inbox, LayoutGrid, Bot, Percent, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { StatsResponse } from '@helpdesk/core'
 
-interface StatsResponse {
-  openTickets: number
-  resolvedToday: number
-  totalTickets: number
+function formatResolutionTime(hours: number | null): string {
+  if (hours === null) return '—'
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  if (h === 0) return `${m}m`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}m`
 }
 
-const statCards = [
+const statCards: {
+  label: string
+  icon: React.ElementType
+  iconClass: string
+  accentClass: string
+  getValue: (s: StatsResponse) => string
+}[] = [
   {
-    key: 'openTickets' as const,
-    label: 'Open tickets',
-    icon: Inbox,
-    iconClass: 'text-amber-500',
-    accentClass: 'border-l-[3px] border-l-amber-400',
-  },
-  {
-    key: 'resolvedToday' as const,
-    label: 'Resolved today',
-    icon: CheckCircle2,
-    iconClass: 'text-emerald-500',
-    accentClass: 'border-l-[3px] border-l-emerald-400',
-  },
-  {
-    key: 'totalTickets' as const,
     label: 'Total tickets',
     icon: LayoutGrid,
     iconClass: 'text-primary',
     accentClass: 'border-l-[3px] border-l-primary/40',
+    getValue: (s) => String(s.totalTickets),
+  },
+  {
+    label: 'Open tickets',
+    icon: Inbox,
+    iconClass: 'text-amber-500',
+    accentClass: 'border-l-[3px] border-l-amber-400',
+    getValue: (s) => String(s.openTickets),
+  },
+  {
+    label: 'Resolved by AI',
+    icon: Bot,
+    iconClass: 'text-violet-500',
+    accentClass: 'border-l-[3px] border-l-violet-400',
+    getValue: (s) => String(s.aiResolvedTickets),
+  },
+  {
+    label: 'AI resolution %',
+    icon: Percent,
+    iconClass: 'text-sky-500',
+    accentClass: 'border-l-[3px] border-l-sky-400',
+    getValue: (s) => `${s.aiResolutionPercentage}%`,
+  },
+  {
+    label: 'Avg resolution time',
+    icon: Clock,
+    iconClass: 'text-emerald-500',
+    accentClass: 'border-l-[3px] border-l-emerald-400',
+    getValue: (s) => formatResolutionTime(s.avgResolutionTimeHours),
   },
 ]
 
@@ -79,7 +103,7 @@ export default function HomePage() {
                 <Skeleton className="h-8 w-16 mt-1" />
               ) : (
                 <p className="text-[30px] font-display font-medium text-foreground leading-none">
-                  {stats?.[stat.key] ?? '—'}
+                  {stats ? stat.getValue(stats) : '—'}
                 </p>
               )}
             </div>

@@ -91,7 +91,11 @@ export async function autoResolveTicket(
       }),
       prisma.ticket.update({
         where: { id: payload.id },
-        data: { status: TicketStatus.resolved },
+        data: {
+          status: TicketStatus.resolved,
+          autoResolved: true,
+          resolvedAt: new Date(),
+        },
       }),
     ]);
 
@@ -104,13 +108,13 @@ export async function autoResolveTicket(
   } else {
     await prisma.ticket.update({
       where: { id: payload.id },
-      data: { status: TicketStatus.open },
+      data: { status: TicketStatus.open, assignedToId: null },
     });
   }
   } catch (err) {
     await prisma.ticket.update({
       where: { id: payload.id },
-      data: { status: TicketStatus.open },
+      data: { status: TicketStatus.open, assignedToId: null },
     });
     throw err;
   }

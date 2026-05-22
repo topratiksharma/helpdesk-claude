@@ -6,16 +6,30 @@ import { TicketStatus } from "../generated/prisma";
 export const statsRouter = Router();
 
 statsRouter.get("/", requireAuth, async (_req, res) => {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const [totalTickets, openTickets, aiResolvedTickets, resolvedOrClosed, avgResult] =
+    await Promise.all([
+      prisma.ticket.count(),
+      prisma.ticket.count({ where: { status: TicketStatus.open } }),
+      prisma.ticket.count({ where: { autoResolved: true } }),
+      prisma.ticket.count({
+        where: { status: { in: [TicketStatus.resolved, TicketStatus.closed] } },
+      }),
+      prisma.$queryRaw<[{ avg_hours: number | null }]>`
+        SELECT AVG(EXTRACT(EPOCH FROM ("resolvedAt" - "createdAt")) / 3600) AS avg_hours
+        FROM "Ticket" WHERE "resolvedAt" IS NOT NULL
+      `,
+    ]);
 
-  const [openTickets, resolvedToday, totalTickets] = await Promise.all([
-    prisma.ticket.count({ where: { status: TicketStatus.open } }),
-    prisma.ticket.count({
-      where: { status: TicketStatus.resolved, updatedAt: { gte: startOfToday } },
-    }),
-    prisma.ticket.count(),
-  ]);
+  const aiResolutionPercentage =
+    resolvedOrClosed > 0
+      ? Math.round((aiResolvedTickets / resolvedOrClosed) * 1000) / 10
+      : 0;
 
-  res.json({ openTickets, resolvedToday, totalTickets });
+  res.json({
+    totalTickets,
+    openTickets,
+    aiResolvedTickets,
+    aiResolutionPercentage,
+    avgResolutionTimeHours: avgResult[0]?.avg_hours ?? null,
+  });
 });

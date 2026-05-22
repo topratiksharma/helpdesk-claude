@@ -148,6 +148,11 @@ ticketsRouter.patch("/:id", requireAuth, async (req, res) => {
   if (data.assignedToId !== undefined) update.assignedToId = data.assignedToId;
   if (data.subject !== undefined) update.subject = data.subject;
 
+  const isBeingResolved =
+    (data.status === "resolved" || data.status === "closed") &&
+    !existing.resolvedAt;
+  if (isBeingResolved) update.resolvedAt = new Date();
+
   const ticket = await prisma.ticket.update({
     where: { id },
     data: update,

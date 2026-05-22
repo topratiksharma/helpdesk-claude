@@ -7,6 +7,7 @@ import { requireWebhookSecret } from "../middleware/webhook-auth";
 import { boss } from "../lib/queue";
 import { CLASSIFY_TICKET_JOB } from "../lib/classify-ticket";
 import { AUTORESOLVE_TICKET_JOB } from "../lib/autoresolve-ticket";
+import { getAiAgentId } from "../lib/ai-agent";
 
 export const inboundEmailRouter = Router();
 
@@ -96,6 +97,7 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       fromName,
     });
 
+    const aiAgentId = await getAiAgentId();
     const newTicket = await prisma.$transaction(async (tx) => {
       const ticket = await tx.ticket.create({
         data: {
@@ -103,6 +105,7 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
           fromEmail: ticketData.fromEmail,
           fromName: ticketData.fromName,
           lastInboundEmailId: messageId,
+          ...(aiAgentId && { assignedToId: aiAgentId }),
         },
       });
       await tx.message.create({

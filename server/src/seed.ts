@@ -2,6 +2,7 @@ import "dotenv/config";
 import { hashPassword } from "better-auth/crypto";
 import { Role } from "./generated/prisma";
 import { prisma } from "./lib/prisma";
+import { AI_AGENT_EMAIL, AI_AGENT_NAME } from "./lib/ai-agent";
 
 const adminEmail = process.env.ADMIN_EMAIL;
 const adminPassword = process.env.ADMIN_PASSWORD;
@@ -66,10 +67,36 @@ async function createUser(
   console.log(`  created  ${email}  (password: ${password})`);
 }
 
+// ─── AI Agent ─────────────────────────────────────────────────────────────────
+
+async function createAiAgent(): Promise<void> {
+  const existing = await prisma.user.findUnique({ where: { email: AI_AGENT_EMAIL } });
+  if (existing) {
+    console.log(`  skipped  ${AI_AGENT_EMAIL} (already exists)`);
+    return;
+  }
+  const now = new Date();
+  await prisma.user.create({
+    data: {
+      id: crypto.randomUUID(),
+      email: AI_AGENT_EMAIL,
+      name: AI_AGENT_NAME,
+      role: Role.agent,
+      emailVerified: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+  console.log(`  created  ${AI_AGENT_EMAIL}`);
+}
+
 // ─── Run ──────────────────────────────────────────────────────────────────────
 
 console.log("\nSeeding admin...");
 await createUser("Admin", adminEmail, adminPassword, Role.admin);
+
+console.log("\nSeeding AI agent...");
+await createAiAgent();
 
 console.log("\nSeeding agents...");
 for (const agent of AGENTS) {
