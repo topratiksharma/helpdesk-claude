@@ -1,7 +1,16 @@
 import { generateText } from "ai";
 import { model } from "./ai";
 import { prisma } from "./prisma";
+import { boss } from "./queue";
 import { Ticket, TicketCategory } from "../generated/prisma";
+
+export const CLASSIFY_TICKET_JOB = "classify-ticket";
+
+export interface ClassifyTicketPayload {
+  id: number;
+  subject: string;
+  body: string;
+}
 
 const VALID_CATEGORIES = Object.values(TicketCategory);
 
@@ -33,4 +42,20 @@ export async function classifyTicket(
     where: { id: ticket.id },
     data: { category },
   });
+}
+
+export async function registerClassifyTicketWorker(): Promise<void> {
+  await boss.createQueue(CLASSIFY_TICKET_JOB, {
+    retryLimit: 3,
+    retryDelay: 30,
+    retryBackoff: true,
+  });
+  await boss.work<ClassifyTicketPayload>(
+    CLASSIFY_TICKET_JOB,
+    async (jobs) => {
+      for (const job of jobs) {
+        await classifyTicket(job.data);
+      }
+    },
+  );
 }

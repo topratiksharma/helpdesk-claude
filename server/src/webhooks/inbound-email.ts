@@ -4,8 +4,8 @@ import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
-import { boss } from "../lib/boss";
-import { CLASSIFY_TICKET_JOB } from "../jobs/classify-ticket.job";
+import { boss } from "../lib/queue";
+import { CLASSIFY_TICKET_JOB } from "../lib/classify-ticket";
 
 export const inboundEmailRouter = Router();
 

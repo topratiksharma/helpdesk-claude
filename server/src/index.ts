@@ -13,13 +13,16 @@ import { ticketsRouter } from "./routes/tickets";
 import { messagesRouter } from "./routes/messages";
 import { statsRouter } from "./routes/stats";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
-import { boss } from "./lib/boss";
-import { registerClassifyTicketWorker } from "./jobs/classify-ticket.job";
+import { startQueue, stopQueue } from "./lib/queue";
+import { registerClassifyTicketWorker } from "./lib/classify-ticket";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
-const allowedOrigins = process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ?? [];
+const allowedOrigins =
+  process.env.TRUSTED_ORIGINS?.split(",")
+    .map((o) => o.trim())
+    .filter(Boolean) ?? [];
 
 app.use(
   cors({
@@ -58,12 +61,12 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-await boss.start();
+await startQueue();
 await registerClassifyTicketWorker();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-process.on("SIGTERM", () => boss.stop());
-process.on("SIGINT", () => boss.stop());
+process.on("SIGTERM", () => stopQueue());
+process.on("SIGINT", () => stopQueue());
