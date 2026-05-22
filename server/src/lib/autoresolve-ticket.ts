@@ -53,6 +53,7 @@ export async function autoResolveTicket(
     data: { status: TicketStatus.processing },
   });
 
+  try {
   const firstName = payload.fromName.split(" ")[0];
 
   const { text } = await generateText({
@@ -101,6 +102,13 @@ export async function autoResolveTicket(
       where: { id: payload.id },
       data: { status: TicketStatus.open },
     });
+  }
+  } catch (err) {
+    await prisma.ticket.update({
+      where: { id: payload.id },
+      data: { status: TicketStatus.open },
+    });
+    throw err;
   }
 }
 
