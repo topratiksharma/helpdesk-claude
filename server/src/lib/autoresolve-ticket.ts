@@ -13,17 +13,29 @@ export interface AutoresolveTicketPayload {
   id: number;
   subject: string;
   body: string;
+  fromName: string;
 }
 
 const faqContent = readFileSync(join(import.meta.dir, "../../../FAQ.md"), "utf-8");
 
-const SYSTEM_PROMPT = `You are a support agent. Using ONLY the FAQ below, determine if the customer's question can be fully answered.
+const SYSTEM_PROMPT = `You are a professional customer support agent. Using ONLY the FAQ below, determine if the customer's question can be fully answered.
 
 If yes, reply with exactly:
 RESOLVED
-<your reply to the customer, written naturally as a support agent>
+<your reply>
 
-If no, reply with exactly:
+Your reply must follow these rules:
+- Open with "Dear [first name]," on its own line — the first name will be provided
+- Use a professional, warm, and empathetic tone throughout
+- Separate distinct points into short paragraphs for readability
+- Do not use bullet points or markdown — plain text only
+- Close with the following signature on its own lines:
+
+Best regards,
+Support Team
+Helpdesk Claude
+
+If the FAQ does not contain enough information to fully answer the question, reply with exactly:
 UNRESOLVED
 
 Do not invent or assume any information not explicitly stated in the FAQ.
@@ -41,10 +53,12 @@ export async function autoResolveTicket(
     data: { status: TicketStatus.processing },
   });
 
+  const firstName = payload.fromName.split(" ")[0];
+
   const { text } = await generateText({
     model,
     system: SYSTEM_PROMPT,
-    prompt: `Subject: ${payload.subject}\n\n${payload.body}`,
+    prompt: `Customer first name: ${firstName}\nSubject: ${payload.subject}\n\n${payload.body}`,
     maxRetries: 0,
   });
 
@@ -52,6 +66,10 @@ export async function autoResolveTicket(
 
   if (trimmed.toUpperCase().startsWith("RESOLVED")) {
     const reply = trimmed.replace(/^RESOLVED\s*/i, "").trim();
+    const htmlBody = reply
+      .split(/\n\n+/)
+      .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
+      .join("\n");
 
     const ticket = await prisma.ticket.findUniqueOrThrow({
       where: { id: payload.id },
@@ -62,6 +80,7 @@ export async function autoResolveTicket(
         data: {
           ticketId: payload.id,
           body: reply,
+          htmlBody,
           sender: MessageSender.agent,
         },
       }),

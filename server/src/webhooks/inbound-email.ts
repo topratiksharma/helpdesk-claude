@@ -117,14 +117,10 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       return ticket;
     });
 
-    const ticket = {
-      id: newTicket.id,
-      subject: newTicket.subject,
-      body: body ?? "",
-    };
+    const basePayload = { id: newTicket.id, subject: newTicket.subject, body: body ?? "" };
     await Promise.all([
-      boss.send(CLASSIFY_TICKET_JOB, ticket),
-      boss.send(AUTORESOLVE_TICKET_JOB, ticket),
+      boss.send(CLASSIFY_TICKET_JOB, basePayload),
+      boss.send(AUTORESOLVE_TICKET_JOB, { ...basePayload, fromName: newTicket.fromName }),
     ]);
   }
 
