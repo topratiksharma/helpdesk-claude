@@ -1,0 +1,102 @@
+import { readFileSync } from "fs";
+import { join } from "path";
+import { generateText } from "ai";
+import { model } from "./ai";
+import { prisma } from "./prisma";
+import { boss } from "./queue";
+import { sendEmail } from "./email";
+import { MessageSender, TicketStatus } from "../generated/prisma";
+
+export const AUTORESOLVE_TICKET_JOB = "autoresolve-ticket";
+
+export interface AutoresolveTicketPayload {
+  id: number;
+  subject: string;
+  body: string;
+}
+
+const faqContent = readFileSync(join(import.meta.dir, "../../../FAQ.md"), "utf-8");
+
+const SYSTEM_PROMPT = `You are a support agent. Using ONLY the FAQ below, determine if the customer's question can be fully answered.
+
+If yes, reply with exactly:
+RESOLVED
+<your reply to the customer, written naturally as a support agent>
+
+If no, reply with exactly:
+UNRESOLVED
+
+Do not invent or assume any information not explicitly stated in the FAQ.
+
+FAQ:
+---
+${faqContent}
+---`;
+
+export async function autoResolveTicket(
+  payload: AutoresolveTicketPayload,
+): Promise<void> {
+  await prisma.ticket.update({
+    where: { id: payload.id },
+    data: { status: TicketStatus.processing },
+  });
+
+  const { text } = await generateText({
+    model,
+    system: SYSTEM_PROMPT,
+    prompt: `Subject: ${payload.subject}\n\n${payload.body}`,
+    maxRetries: 0,
+  });
+
+  const trimmed = text.trim();
+
+  if (trimmed.toUpperCase().startsWith("RESOLVED")) {
+    const reply = trimmed.replace(/^RESOLVED\s*/i, "").trim();
+
+    const ticket = await prisma.ticket.findUniqueOrThrow({
+      where: { id: payload.id },
+    });
+
+    await prisma.$transaction([
+      prisma.message.create({
+        data: {
+          ticketId: payload.id,
+          body: reply,
+          sender: MessageSender.agent,
+        },
+      }),
+      prisma.ticket.update({
+        where: { id: payload.id },
+        data: { status: TicketStatus.resolved },
+      }),
+    ]);
+
+    await sendEmail({
+      to: ticket.fromEmail,
+      toName: ticket.fromName,
+      subject: `Re: ${ticket.subject}`,
+      body: reply,
+    });
+  } else {
+    await prisma.ticket.update({
+      where: { id: payload.id },
+      data: { status: TicketStatus.open },
+    });
+  }
+}
+
+export async function registerAutoResolveTicketWorker(): Promise<void> {
+  await boss.createQueue(AUTORESOLVE_TICKET_JOB, {
+    retryLimit: 3,
+    retryDelay: 30,
+    retryBackoff: true,
+  });
+  await boss.work<AutoresolveTicketPayload>(
+    AUTORESOLVE_TICKET_JOB,
+    async (jobs) => {
+      for (const job of jobs) {
+        await autoResolveTicket(job.data);
+      }
+    },
+  );
+}

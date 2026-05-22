@@ -15,6 +15,7 @@ import { statsRouter } from "./routes/stats";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
 import { startQueue, stopQueue } from "./lib/queue";
 import { registerClassifyTicketWorker } from "./lib/classify-ticket";
+import { registerAutoResolveTicketWorker } from "./lib/autoresolve-ticket";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -62,7 +63,10 @@ app.get("/api/health", async (_req, res) => {
 });
 
 await startQueue();
-await registerClassifyTicketWorker();
+await Promise.all([
+  registerClassifyTicketWorker(),
+  registerAutoResolveTicketWorker(),
+]);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const TicketStatusEnum = z.enum(['open', 'resolved', 'closed'])
+export const TicketStatusEnum = z.enum(['new', 'processing', 'open', 'resolved', 'closed'])
 export type TicketStatus = z.infer<typeof TicketStatusEnum>
 
 export const TicketCategoryEnum = z.enum(['general_questions', 'technical_questions', 'refund'])

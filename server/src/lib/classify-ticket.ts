@@ -59,3 +59,4 @@ export async function registerClassifyTicketWorker(): Promise<void> {
     },
   );
 }
+

@@ -6,6 +6,7 @@ import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
 import { boss } from "../lib/queue";
 import { CLASSIFY_TICKET_JOB } from "../lib/classify-ticket";
+import { AUTORESOLVE_TICKET_JOB } from "../lib/autoresolve-ticket";
 
 export const inboundEmailRouter = Router();
 
@@ -116,11 +117,15 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       return ticket;
     });
 
-    await boss.send(CLASSIFY_TICKET_JOB, {
+    const ticket = {
       id: newTicket.id,
       subject: newTicket.subject,
       body: body ?? "",
-    });
+    };
+    await Promise.all([
+      boss.send(CLASSIFY_TICKET_JOB, ticket),
+      boss.send(AUTORESOLVE_TICKET_JOB, ticket),
+    ]);
   }
 
   res.status(200).json({ ok: true });
