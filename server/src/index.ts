@@ -13,6 +13,8 @@ import { ticketsRouter } from "./routes/tickets";
 import { messagesRouter } from "./routes/messages";
 import { statsRouter } from "./routes/stats";
 import { inboundEmailRouter } from "./webhooks/inbound-email";
+import { boss } from "./lib/boss";
+import { registerClassifyTicketWorker } from "./jobs/classify-ticket.job";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -56,6 +58,12 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
+await boss.start();
+await registerClassifyTicketWorker();
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+process.on("SIGTERM", () => boss.stop());
+process.on("SIGINT", () => boss.stop());

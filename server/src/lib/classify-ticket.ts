@@ -13,7 +13,7 @@ const SYSTEM_PROMPT = `You are a support ticket classifier. Classify the support
                         Respond with ONLY the category name, nothing else.`;
 
 export async function classifyTicket(
-  ticket: Ticket & { body: string },
+  ticket: Pick<Ticket, "id" | "subject"> & { body: string },
 ): Promise<void> {
   const { text } = await generateText({
     model,

@@ -4,7 +4,8 @@ import { prisma } from "../lib/prisma";
 import { validate } from "../lib/validate";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
-import { classifyTicket } from "../lib/classify-ticket";
+import { boss } from "../lib/boss";
+import { CLASSIFY_TICKET_JOB } from "../jobs/classify-ticket.job";
 
 export const inboundEmailRouter = Router();
 
@@ -115,9 +116,10 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       return ticket;
     });
 
-    // Non-blocking: classify after the webhook response is returned
-    classifyTicket({ ...newTicket, body: body ?? "" }).catch((err) => {
-      console.error("[classify-ticket] failed for ticket", newTicket.id, err);
+    await boss.send(CLASSIFY_TICKET_JOB, {
+      id: newTicket.id,
+      subject: newTicket.subject,
+      body: body ?? "",
     });
   }
 
