@@ -30,9 +30,9 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="h-dvh flex flex-col bg-background">
       <Navbar />
-      <main className="max-w-[1200px] mx-auto px-6 py-6">
+      <main className="flex-1 flex flex-col overflow-y-auto max-w-[1200px] w-full mx-auto px-6 py-6">
         <Outlet />
       </main>
     </div>

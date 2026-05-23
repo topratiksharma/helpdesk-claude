@@ -73,7 +73,7 @@ export default function HomePage() {
   })
 
   return (
-    <div className="animate-fade-up">
+    <div className="animate-fade-up flex flex-col flex-1">
       <div className="mb-8">
         <h1 className="font-display text-[32px] font-medium text-foreground tracking-[-0.02em] leading-[1.2] mb-1.5">
           Good to see you, {firstName}.

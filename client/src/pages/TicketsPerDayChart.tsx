@@ -35,34 +35,36 @@ interface TicketsPerDayChartProps {
 
 export default function TicketsPerDayChart({ data, isLoading }: TicketsPerDayChartProps) {
   return (
-    <div className="mt-4 bg-card border border-border rounded-md px-5 pt-5 pb-3 shadow-sm">
+    <div className="mt-4 flex flex-col flex-1 bg-card border border-border rounded-md px-5 pt-5 pb-3 shadow-sm">
       <p className="text-xs text-muted-foreground uppercase tracking-[0.06em] mb-4">
         Tickets created — last 30 days
       </p>
       {isLoading ? (
-        <Skeleton className="h-[160px] w-full" />
+        <Skeleton className="flex-1 w-full" />
       ) : (
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.08} />
-            <XAxis
-              dataKey="date"
-              interval={4}
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              allowDecimals={false}
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
-              axisLine={false}
-              tickLine={false}
-              width={48}
-            />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'currentColor', fillOpacity: 0.05 }} />
-            <Bar dataKey="count" fill="#818cf8" radius={[3, 3, 0, 0]} maxBarSize={32} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.08} />
+              <XAxis
+                dataKey="date"
+                interval={4}
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
+                width={48}
+              />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'currentColor', fillOpacity: 0.05 }} />
+              <Bar dataKey="count" fill="#818cf8" radius={[3, 3, 0, 0]} maxBarSize={32} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   )
