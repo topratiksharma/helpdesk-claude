@@ -1,3 +1,4 @@
+import "./instrument";
 import "./env";
 import express from "express";
 import cors from "cors";
@@ -17,6 +18,7 @@ import { startQueue, stopQueue } from "./lib/queue";
 import { registerClassifyTicketWorker } from "./lib/classify-ticket";
 import { registerAutoResolveTicketWorker } from "./lib/autoresolve-ticket";
 import { registerSendReplyEmailWorker } from "./lib/send-reply-email";
+import * as Sentry from "@sentry/node";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -62,6 +64,8 @@ app.get("/api/health", async (_req, res) => {
     res.status(503).json({ status: "error", db: "disconnected" });
   }
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 await startQueue();
 await Promise.all([

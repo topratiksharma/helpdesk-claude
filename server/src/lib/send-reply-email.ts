@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { boss } from "./queue";
 import { sendEmail } from "./email";
 
@@ -19,13 +20,18 @@ export async function registerSendReplyEmailWorker(): Promise<void> {
   });
   await boss.work<SendReplyEmailPayload>(SEND_REPLY_EMAIL_JOB, async (jobs) => {
     for (const job of jobs) {
-      await sendEmail({
-        to: job.data.to,
-        toName: job.data.toName,
-        subject: job.data.subject,
-        body: job.data.body,
-        html: job.data.html,
-      });
+      try {
+        await sendEmail({
+          to: job.data.to,
+          toName: job.data.toName,
+          subject: job.data.subject,
+          body: job.data.body,
+          html: job.data.html,
+        });
+      } catch (err) {
+        Sentry.captureException(err);
+        throw err;
+      }
     }
   });
 }

@@ -1,9 +1,17 @@
+import * as Sentry from '@sentry/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './lib/theme'
 import './index.css'
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: import.meta.env.MODE,
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampleRate: 1.0,
+})
 
 const queryClient = new QueryClient()
 import LoginPage from './pages/LoginPage'
@@ -36,10 +44,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong.</p>}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   </StrictMode>
 )

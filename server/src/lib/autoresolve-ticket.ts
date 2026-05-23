@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -113,6 +114,7 @@ export async function autoResolveTicket(
     });
   }
   } catch (err) {
+    Sentry.captureException(err);
     await prisma.ticket.update({
       where: { id: payload.id },
       data: { status: TicketStatus.open, assignedToId: null },

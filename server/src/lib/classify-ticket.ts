@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { generateText } from "ai";
 import { model } from "./ai";
 import { prisma } from "./prisma";
@@ -54,7 +55,12 @@ export async function registerClassifyTicketWorker(): Promise<void> {
     CLASSIFY_TICKET_JOB,
     async (jobs) => {
       for (const job of jobs) {
-        await classifyTicket(job.data);
+        try {
+          await classifyTicket(job.data);
+        } catch (err) {
+          Sentry.captureException(err);
+          throw err;
+        }
       }
     },
   );
