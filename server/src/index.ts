@@ -16,6 +16,7 @@ import { inboundEmailRouter } from "./webhooks/inbound-email";
 import { startQueue, stopQueue } from "./lib/queue";
 import { registerClassifyTicketWorker } from "./lib/classify-ticket";
 import { registerAutoResolveTicketWorker } from "./lib/autoresolve-ticket";
+import { registerSendReplyEmailWorker } from "./lib/send-reply-email";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -66,6 +67,7 @@ await startQueue();
 await Promise.all([
   registerClassifyTicketWorker(),
   registerAutoResolveTicketWorker(),
+  registerSendReplyEmailWorker(),
 ]);
 
 app.listen(PORT, () => {

@@ -6,7 +6,11 @@ import { model } from "../lib/ai";
 import { validate, parseIntParam } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { MessageSender } from "../generated/prisma";
-import { sendEmail } from "../lib/email";
+import { boss } from "../lib/queue";
+import {
+  SEND_REPLY_EMAIL_JOB,
+  SendReplyEmailPayload,
+} from "../lib/send-reply-email";
 
 export const messagesRouter = Router({ mergeParams: true });
 
@@ -110,15 +114,13 @@ messagesRouter.post("/:ticketId/messages", requireAuth, async (req, res) => {
   });
 
   if (data.sender === "agent") {
-    sendEmail({
+    await boss.send(SEND_REPLY_EMAIL_JOB, {
       to: ticket.fromEmail,
       toName: ticket.fromName,
       subject: `Re: ${ticket.subject}`,
       body: data.body,
-      html: data.bodyHtml,
-    }).catch((err) => {
-      console.error("[messages/reply] email send failed:", err);
-    });
+      ...(data.bodyHtml && { html: data.bodyHtml }),
+    } as SendReplyEmailPayload);
   }
 
   res.status(201).json({ message });
