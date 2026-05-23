@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { inboundEmailSchema, createTicketSchema } from "@helpdesk/core";
+import multer from "multer";
+import Parse from "@sendgrid/inbound-mail-parser";
+import { createTicketSchema } from "@helpdesk/core";
 import { prisma } from "../lib/prisma";
-import { validate } from "../lib/validate";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 import { requireWebhookSecret } from "../middleware/webhook-auth";
 import { boss } from "../lib/queue";
@@ -9,7 +10,25 @@ import { CLASSIFY_TICKET_JOB } from "../lib/classify-ticket";
 import { AUTORESOLVE_TICKET_JOB } from "../lib/autoresolve-ticket";
 import { getAiAgentId } from "../lib/ai-agent";
 
+const upload = multer();
+
 export const inboundEmailRouter = Router();
+
+function parseFrom(raw: string): { email: string; name: string } {
+  const match = raw.match(/^(.*?)\s*<([^>]+)>$/);
+  if (match) {
+    const name = match[1].trim();
+    const email = match[2].trim().toLowerCase();
+    return { name: name || email, email };
+  }
+  const email = raw.trim().toLowerCase();
+  return { name: email, email };
+}
+
+function extractHeader(headers: string, name: string): string | undefined {
+  const match = headers.match(new RegExp(`^${name}:\\s*(.+)`, "im"));
+  return match?.[1]?.trim().replace(/^<|>$/g, "");
+}
 
 function normalizeSubject(subject: string): string {
   return subject
@@ -18,11 +37,26 @@ function normalizeSubject(subject: string): string {
     .toLowerCase();
 }
 
-inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
-  const data = validate(inboundEmailSchema, req.body, res);
-  if (!data) return;
+inboundEmailRouter.post("/", requireWebhookSecret, upload.any(), async (req, res) => {
+  const parser = new Parse(
+    { keys: ["from", "subject", "text", "html", "headers"] },
+    { body: req.body, files: (req.files as Express.Multer.File[]) ?? [] },
+  );
 
-  const { from, fromName, subject, text, html, messageId, inReplyTo } = data;
+  const fields = parser.keyValues();
+  const { email: from, name: fromName } = parseFrom(fields.from ?? "");
+  const subject: string = fields.subject ?? "";
+  const text: string = fields.text ?? "";
+  const html: string = fields.html ?? "";
+  const rawHeaders: string = fields.headers ?? "";
+  const messageId = extractHeader(rawHeaders, "Message-ID") ?? "";
+  const inReplyTo = extractHeader(rawHeaders, "In-Reply-To");
+
+  if (!from || !subject || !messageId) {
+    res.status(400).json({ error: "Missing required email fields." });
+    return;
+  }
+
   const body = text || html;
 
   // Idempotency: skip if we've already processed this message
@@ -89,7 +123,6 @@ inboundEmailRouter.post("/", requireWebhookSecret, async (req, res) => {
       }),
     ]);
   } else {
-    // Validate ticket creation data using the shared schema
     const ticketData = createTicketSchema.parse({
       subject,
       body,
