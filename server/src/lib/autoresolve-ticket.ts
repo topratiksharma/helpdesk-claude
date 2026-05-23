@@ -104,6 +104,7 @@ export async function autoResolveTicket(
       toName: ticket.fromName,
       subject: `Re: ${ticket.subject}`,
       body: reply,
+      html: htmlBody,
     });
   } else {
     await prisma.ticket.update({
