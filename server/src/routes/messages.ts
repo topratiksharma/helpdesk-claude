@@ -7,6 +7,7 @@ import { validate, parseIntParam } from "../lib/validate";
 import { requireAuth } from "../middleware/auth";
 import { MessageSender } from "../generated/prisma";
 import { boss } from "../lib/queue";
+import { logger } from "../lib/logger";
 import {
   SEND_REPLY_EMAIL_JOB,
   SendReplyEmailPayload,
@@ -42,7 +43,7 @@ Return only the improved reply text with no other output.`,
     res.json({ refined: text });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[messages/refine]", message);
+    logger.error("[messages/refine]", err);
     res.status(502).json({ error: message });
   }
 });
@@ -83,7 +84,7 @@ messagesRouter.post("/:ticketId/summarize", requireAuth, async (req, res) => {
     res.json({ summary: text });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[messages/summarize]", message);
+    logger.error("[messages/summarize]", err);
     res.status(502).json({ error: message });
   }
 });

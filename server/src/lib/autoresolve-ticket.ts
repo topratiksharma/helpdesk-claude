@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -6,6 +5,7 @@ import { generateText } from "ai";
 import { model } from "./ai";
 import { prisma } from "./prisma";
 import { boss } from "./queue";
+import { logger } from "./logger";
 import { sendEmail } from "./email";
 import { MessageSender, TicketStatus } from "../generated/prisma";
 
@@ -114,7 +114,7 @@ export async function autoResolveTicket(
     });
   }
   } catch (err) {
-    Sentry.captureException(err);
+    logger.error("[autoresolve-ticket] job failed", err);
     await prisma.ticket.update({
       where: { id: payload.id },
       data: { status: TicketStatus.open, assignedToId: null },

@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/node";
 import { boss } from "./queue";
+import { logger } from "./logger";
 import { sendEmail } from "./email";
 
 export const SEND_REPLY_EMAIL_JOB = "send-reply-email";
@@ -29,7 +29,7 @@ export async function registerSendReplyEmailWorker(): Promise<void> {
           html: job.data.html,
         });
       } catch (err) {
-        Sentry.captureException(err);
+        logger.error("[send-reply-email] job failed", err);
         throw err;
       }
     }

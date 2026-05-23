@@ -1,8 +1,8 @@
-import * as Sentry from "@sentry/node";
 import { generateText } from "ai";
 import { model } from "./ai";
 import { prisma } from "./prisma";
 import { boss } from "./queue";
+import { logger } from "./logger";
 import { Ticket, TicketCategory } from "../generated/prisma";
 
 export const CLASSIFY_TICKET_JOB = "classify-ticket";
@@ -58,7 +58,7 @@ export async function registerClassifyTicketWorker(): Promise<void> {
         try {
           await classifyTicket(job.data);
         } catch (err) {
-          Sentry.captureException(err);
+          logger.error("[classify-ticket] job failed", err);
           throw err;
         }
       }
