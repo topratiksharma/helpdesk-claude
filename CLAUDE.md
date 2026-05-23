@@ -60,9 +60,29 @@ bun run dev:client
 
 > Bun binary is at `~/.bun/bin/bun` — scripts in package.json use this full path.
 
+## Database Migrations
+
+**RULE: Every change to `server/prisma/schema.prisma` MUST be followed immediately by running `migrate dev`. This is part of "done" for any schema task — not optional cleanup.**
+
+Never use `db push`. It applies changes without creating a migration file, causing schema drift that requires manual recovery.
+
+The `.env` file is at `server/src/.env`. Run from `server/`:
+
+```bash
+set -a && source src/.env && set +a
+bun run node_modules/prisma/build/index.js migrate dev --name <descriptive_name>
+```
+
+This creates `server/prisma/migrations/<timestamp>_<name>/migration.sql` AND regenerates the Prisma client in one step.
+
+**Recovery if `db push` was used by accident:**
+1. Manually write the migration SQL file in a new `migrations/<timestamp>_<name>/` directory
+2. Mark it applied: `bun run node_modules/prisma/build/index.js migrate resolve --applied <name>`
+3. Confirm: `migrate status` must show "Database schema is up to date!"
+
 ## Domain Model
 
-**Ticket statuses:** `open` → `resolved` → `closed`
+**Ticket statuses:** `new` → `processing` → `open` → `resolved` → `closed`
 
 **Ticket categories:** `General Questions`, `Technical Questions`, `Refund`
 
