@@ -554,20 +554,18 @@ describe('TicketDetailPage — reply form validation', () => {
     mockedAxios.get.mockResolvedValue({ data: unassignedTicket })
   })
 
-  it('shows a validation error when submitting an empty reply', async () => {
-    const user = userEvent.setup()
+  it('Send reply button is disabled when body is empty', async () => {
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
-    await user.click(screen.getByRole('button', { name: /send reply/i }))
-    expect(await screen.findByText(/reply cannot be empty/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /send reply/i })).toBeDisabled()
   })
 
   it('does not call POST when the body is empty', async () => {
     const user = userEvent.setup()
     renderWithProviders(<TicketDetailPage />)
     await screen.findByText('Login issue')
+    // Button is disabled on empty body — clicking has no effect
     await user.click(screen.getByRole('button', { name: /send reply/i }))
-    await screen.findByText(/reply cannot be empty/i)
     expect(mockedAxios.post).not.toHaveBeenCalled()
   })
 })
