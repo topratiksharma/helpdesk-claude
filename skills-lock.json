@@ -25,11 +25,29 @@
       "skillPath": "better-auth/emailAndPassword/SKILL.md",
       "computedHash": "747d7f73bd9e2ec5317b8ef88dc70f97df716d00e3d02de4051feebaa48b062d"
     },
+    "front-end-testing": {
+      "source": "citypaul/.dotfiles",
+      "sourceType": "github",
+      "skillPath": "claude/.claude/skills/front-end-testing/SKILL.md",
+      "computedHash": "3e3729df35dcdd7a07aeb16b8685b222f8b85bb79d51fc54559b604b1b837f98"
+    },
     "organization-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/organization/SKILL.md",
       "computedHash": "79a5a85b43d10e9fe37582b3506b051a33a991817b938f349099baa5ddba21aa"
+    },
+    "react-testing": {
+      "source": "citypaul/.dotfiles",
+      "sourceType": "github",
+      "skillPath": "claude/.claude/skills/react-testing/SKILL.md",
+      "computedHash": "3d424398a6600933b956440654f8b38ee6fb134d9f896beae285806c2e46a558"
+    },
+    "testing": {
+      "source": "citypaul/.dotfiles",
+      "sourceType": "github",
+      "skillPath": "claude/.claude/skills/testing/SKILL.md",
+      "computedHash": "69d3119d28e0594525ec372ad0e03667ff26782ad0715a64ffbf751ffff4eb68"
     },
     "two-factor-authentication-best-practices": {
       "source": "better-auth/skills",
