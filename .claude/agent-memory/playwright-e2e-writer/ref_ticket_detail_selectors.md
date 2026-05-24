@@ -20,11 +20,14 @@ type: reference
 ## Category select
 
 - Trigger: `page.getByRole("combobox", { name: /ticket category/i })` — aria-label is "Ticket category"
-- Display values: "No category", "General", "Technical", "Refund"
+- Option values (from `CATEGORY_LABELS`): "No category", "General Questions", "Technical Questions", "Refund"
+- Admin-only: agents see a plain text `<p>` instead of a select
 
 ## Assigned agent select
 
 - Trigger: `page.getByRole("combobox", { name: /assigned agent/i })` — aria-label is "Assigned agent"
+- Option values: "Unassigned" + one option per agent using `agent.name`
+- Admin-only: agents see a plain text `<p>` instead of a select
 
 ## Ticket helper
 
