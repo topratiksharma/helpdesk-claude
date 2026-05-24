@@ -1,11 +1,70 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { screen, act } from '@testing-library/react'
+import { screen, act, fireEvent } from '@testing-library/react'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TicketFilters } from './TicketFilters'
 import type { TicketFilterState } from './tickets.types'
 
-// No axios or auth-client needed — TicketFilters is a pure UI component
+// No axios or auth-client needed — TicketFilters is a pure UI component.
+//
+// Radix UI Select does not work in jsdom due to missing pointer APIs. We
+// replace @/components/ui/select with a native <select> so tests can interact
+// with it via userEvent.selectOptions.
+
+vi.mock('@/components/ui/select', async () => {
+  const { createContext, useContext, createElement } = await import('react')
+
+  type SelectCtx = {
+    value: string
+    onValueChange: (v: string) => void
+    disabled?: boolean
+  }
+
+  const Ctx = createContext<SelectCtx | null>(null)
+
+  function Select({
+    children,
+    value,
+    onValueChange,
+    disabled,
+  }: {
+    children: React.ReactNode
+    value: string
+    onValueChange: (v: string) => void
+    disabled?: boolean
+  }) {
+    return createElement(Ctx.Provider, { value: { value, onValueChange, disabled } }, children)
+  }
+
+  function SelectTrigger({ children }: { children?: React.ReactNode }) {
+    return createElement(React.Fragment, null, children)
+  }
+
+  function SelectValue() {
+    return null
+  }
+
+  function SelectContent({ children }: { children: React.ReactNode }) {
+    const ctx = useContext(Ctx)!
+    return createElement(
+      'select',
+      {
+        'data-testid': 'category-select',
+        value: ctx.value,
+        disabled: ctx.disabled,
+        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => ctx.onValueChange(e.target.value),
+      },
+      children,
+    )
+  }
+
+  function SelectItem({ value, children }: { value: string; children: React.ReactNode }) {
+    return createElement('option', { value }, children)
+  }
+
+  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
+})
 
 // ─── Initial mount callback ────────────────────────────────────────────────────
 
@@ -68,6 +127,9 @@ describe('TicketFilters — status buttons', () => {
 })
 
 // ─── Search debounce ──────────────────────────────────────────────────────────
+//
+// Use vi.useFakeTimers() + fireEvent.change for typing. userEvent.type() uses
+// its own timer queue internally, which can deadlock with fake timers.
 
 describe('TicketFilters — search debounce', () => {
   beforeEach(() => {
@@ -78,31 +140,30 @@ describe('TicketFilters — search debounce', () => {
     vi.useRealTimers()
   })
 
-  it('does not call onFiltersChange with search value before 400ms debounce fires', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('does not call onFiltersChange with search value before 400ms debounce fires', () => {
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
 
     // Clear the initial mount call
     onFiltersChange.mockClear()
 
-    await user.type(screen.getByPlaceholderText('Search tickets…'), 'hello')
+    const input = screen.getByPlaceholderText('Search tickets…')
+    fireEvent.change(input, { target: { value: 'hello' } })
 
-    // Timer has not fired yet — search should still be ''
+    // Debounce timer has not fired yet
     const callsWithHello = onFiltersChange.mock.calls.filter(
-      ([f]: [TicketFilterState]) => f.search === 'hello',
+      ([f]) => (f as TicketFilterState).search === 'hello',
     )
     expect(callsWithHello).toHaveLength(0)
   })
 
-  it('calls onFiltersChange with search value after 400ms', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('calls onFiltersChange with search value after 400ms', () => {
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
-
     onFiltersChange.mockClear()
 
-    await user.type(screen.getByPlaceholderText('Search tickets…'), 'hello')
+    const input = screen.getByPlaceholderText('Search tickets…')
+    fireEvent.change(input, { target: { value: 'hello' } })
 
     act(() => {
       vi.advanceTimersByTime(400)
@@ -113,19 +174,20 @@ describe('TicketFilters — search debounce', () => {
     )
   })
 
-  it('calls onFiltersChange with empty search after clearing the input', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  it('calls onFiltersChange with empty search after clearing the input', () => {
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
 
     const input = screen.getByPlaceholderText('Search tickets…')
 
-    await user.type(input, 'hello')
+    // Type something, wait for debounce
+    fireEvent.change(input, { target: { value: 'hello' } })
     act(() => { vi.advanceTimersByTime(400) })
 
     onFiltersChange.mockClear()
 
-    await user.clear(input)
+    // Clear the input, wait for debounce
+    fireEvent.change(input, { target: { value: '' } })
     act(() => { vi.advanceTimersByTime(400) })
 
     expect(onFiltersChange).toHaveBeenLastCalledWith(
@@ -135,18 +197,17 @@ describe('TicketFilters — search debounce', () => {
 })
 
 // ─── Category select ──────────────────────────────────────────────────────────
+//
+// The Select mock renders a native <select data-testid="category-select">.
+// We use userEvent.selectOptions to pick a value.
 
 describe('TicketFilters — category select', () => {
-  it('calls onFiltersChange with the selected category', async () => {
+  it('calls onFiltersChange with "general_questions" when General is selected', async () => {
     const user = userEvent.setup()
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
 
-    // Open the Select dropdown
-    await user.click(screen.getByRole('combobox'))
-
-    // Click one of the category options (General)
-    await user.click(screen.getByRole('option', { name: 'General' }))
+    await user.selectOptions(screen.getByTestId('category-select'), 'general_questions')
 
     expect(onFiltersChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ category: 'general_questions' }),
@@ -158,28 +219,23 @@ describe('TicketFilters — category select', () => {
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
 
-    await user.click(screen.getByRole('combobox'))
-    await user.click(screen.getByRole('option', { name: 'Technical' }))
+    await user.selectOptions(screen.getByTestId('category-select'), 'technical_questions')
 
     expect(onFiltersChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ category: 'technical_questions' }),
     )
   })
 
-  it('calls onFiltersChange with "all" when All categories is selected', async () => {
+  it('calls onFiltersChange with category "all" when All categories is selected', async () => {
     const user = userEvent.setup()
     const onFiltersChange = vi.fn()
     render(<TicketFilters onFiltersChange={onFiltersChange} />)
 
-    // First select a specific category
-    await user.click(screen.getByRole('combobox'))
-    await user.click(screen.getByRole('option', { name: 'General' }))
-
+    // First pick a specific category, then go back to all
+    await user.selectOptions(screen.getByTestId('category-select'), 'general_questions')
     onFiltersChange.mockClear()
 
-    // Then go back to All
-    await user.click(screen.getByRole('combobox'))
-    await user.click(screen.getByRole('option', { name: 'All categories' }))
+    await user.selectOptions(screen.getByTestId('category-select'), 'all')
 
     expect(onFiltersChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ category: 'all' }),
