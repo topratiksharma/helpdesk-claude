@@ -1,0 +1,14 @@
+.git
+.gitignore
+node_modules
+*/node_modules
+client/
+e2e/
+playwright-report/
+test-results/
+**/*.md
+!FAQ.md
+*.toml
+*.yaml
+*.yml
+.env*
