@@ -71,12 +71,12 @@ export default function LoginPage() {
           <div className="w-8 h-8 rounded-[7px] bg-white/20 flex items-center justify-center shrink-0">
             <LogoMark className="text-white" />
           </div>
-          <span className="font-display text-xl text-white/90 tracking-[-0.01em]">Helpdesk</span>
+          <span className="font-display text-[15px] font-semibold text-white/90 tracking-[-0.02em]">Helpdesk</span>
         </div>
 
         {/* Tagline — pushed to bottom */}
         <div className="relative mt-auto">
-          <h2 className="font-display text-[38px] xl:text-[44px] font-medium text-white leading-[1.15] tracking-[-0.025em] mb-4">
+          <h2 className="font-display text-[34px] xl:text-[40px] font-semibold text-white leading-[1.15] tracking-[-0.03em] mb-4">
             Support at the speed of your team.
           </h2>
           <p className="text-white/50 text-[13.5px] leading-relaxed">
@@ -94,14 +94,14 @@ export default function LoginPage() {
             <div className="w-9 h-9 rounded-[8px] bg-primary flex items-center justify-center shrink-0">
               <LogoMark className="text-white" />
             </div>
-            <span className="font-display text-2xl font-medium text-foreground tracking-[-0.01em]">
+            <span className="font-display text-xl font-semibold text-foreground tracking-[-0.02em]">
               Helpdesk
             </span>
           </div>
 
           {/* Heading */}
           <div className="mb-8">
-            <h1 className="font-display text-[30px] font-medium text-foreground tracking-[-0.02em] leading-tight mb-1.5">
+            <h1 className="font-display text-[26px] font-semibold text-foreground tracking-[-0.03em] leading-tight mb-1.5">
               Welcome back
             </h1>
             <p className="text-[13px] text-muted-foreground">

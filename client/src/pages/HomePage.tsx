@@ -75,7 +75,7 @@ export default function HomePage() {
   return (
     <div className="animate-fade-up flex flex-col flex-1">
       <div className="mb-8">
-        <h1 className="font-display text-[32px] font-medium text-foreground tracking-[-0.02em] leading-[1.2] mb-1.5">
+        <h1 className="font-display text-[28px] font-semibold text-foreground tracking-[-0.03em] leading-[1.2] mb-1.5">
           Good to see you, {firstName}.
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -103,7 +103,7 @@ export default function HomePage() {
               {isPending ? (
                 <Skeleton className="h-8 w-16 mt-1" />
               ) : (
-                <p className="text-[30px] font-display font-medium text-foreground leading-none">
+                <p className="text-[26px] font-display font-semibold text-foreground leading-none">
                   {stats ? stat.getValue(stats) : '—'}
                 </p>
               )}

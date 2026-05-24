@@ -17,7 +17,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-card border-b border-border sticky top-0 z-40">
+    <header className="bg-card/95 backdrop-blur-md border-b border-border sticky top-0 z-40">
       <div className="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between">
         {/* Brand + nav */}
         <div className="flex items-center gap-6">
@@ -31,7 +31,7 @@ export default function Navbar() {
                 />
               </svg>
             </div>
-            <span className="font-display text-lg font-medium text-foreground tracking-[-0.01em]">
+            <span className="font-display text-[15px] font-semibold text-foreground tracking-[-0.02em]">
               Helpdesk
             </span>
           </div>

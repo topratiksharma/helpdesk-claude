@@ -19,7 +19,7 @@ export function TicketHeader({ id, subject, status }: TicketHeaderProps) {
           {status}
         </Badge>
       </div>
-      <h1 className="font-display text-[28px] font-medium text-foreground tracking-[-0.02em] leading-[1.2]">
+      <h1 className="font-display text-[24px] font-semibold text-foreground tracking-[-0.03em] leading-[1.2]">
         {subject}
       </h1>
     </div>
