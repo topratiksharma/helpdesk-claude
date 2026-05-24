@@ -102,3 +102,41 @@ describe('LoginPage — already authenticated', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
   })
 })
+
+// ─── Successful login redirect ────────────────────────────────────────────────
+
+describe('LoginPage — successful login redirect', () => {
+  it('redirects to / after successful sign-in', async () => {
+    const user = userEvent.setup()
+    mockedSignIn.mockResolvedValue({
+      data: { user: { id: 'u1', name: 'Admin', email: 'admin@example.com' } },
+      error: null,
+    } as Awaited<ReturnType<typeof signIn.email>>)
+
+    renderLoginWithRouter()
+
+    await user.type(screen.getByLabelText(/email address/i), 'admin@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument()
+  })
+})
+
+// ─── Button disabled while sign-in is pending ─────────────────────────────────
+
+describe('LoginPage — button disabled while pending', () => {
+  it('disables the sign-in button while sign-in is in flight', async () => {
+    const user = userEvent.setup()
+    // Never-resolving promise simulates an in-flight request
+    mockedSignIn.mockReturnValue(new Promise(() => { }))
+
+    renderLogin()
+
+    await user.type(screen.getByLabelText(/email address/i), 'admin@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+    expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled()
+  })
+})
