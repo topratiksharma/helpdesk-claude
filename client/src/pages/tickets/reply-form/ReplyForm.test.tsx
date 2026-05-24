@@ -69,18 +69,16 @@ describe('ReplyForm — validation', () => {
     mockedUseSession.mockReturnValue(agentSession as ReturnType<typeof useSession>)
   })
 
-  it('shows a validation error when submitting with an empty body', async () => {
-    const user = userEvent.setup()
+  it('Send reply button is disabled when body is empty', () => {
     renderWithProviders(<ReplyForm ticketId={1} />)
-    await user.click(screen.getByRole('button', { name: /send reply/i }))
-    expect(await screen.findByText(/reply cannot be empty/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /send reply/i })).toBeDisabled()
   })
 
   it('does not call POST when body is empty', async () => {
     const user = userEvent.setup()
     renderWithProviders(<ReplyForm ticketId={1} />)
+    // Button is disabled on empty body — clicking has no effect
     await user.click(screen.getByRole('button', { name: /send reply/i }))
-    await screen.findByText(/reply cannot be empty/i)
     expect(mockedAxios.post).not.toHaveBeenCalled()
   })
 })
