@@ -152,3 +152,4 @@ vite.config.ts.timestamp-*
 
 # Prisma generated client
 server/src/generated/
+.claude/agent-memory/
