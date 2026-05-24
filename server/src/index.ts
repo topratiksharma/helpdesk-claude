@@ -18,6 +18,7 @@ import { startQueue, stopQueue } from "./lib/queue";
 import { registerClassifyTicketWorker } from "./lib/classify-ticket";
 import { registerAutoResolveTicketWorker } from "./lib/autoresolve-ticket";
 import { registerSendReplyEmailWorker } from "./lib/send-reply-email";
+import compression from "compression";
 import * as Sentry from "@sentry/node";
 
 const app = express();
@@ -36,6 +37,7 @@ app.use(
 );
 
 app.use(helmet());
+app.use(compression());
 
 app.use("/api/auth", authLimiter);
 app.use("/api", apiLimiter);
@@ -74,9 +76,13 @@ await Promise.all([
   registerSendReplyEmailWorker(),
 ]);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
-process.on("SIGTERM", () => stopQueue());
-process.on("SIGINT", () => stopQueue());
+function shutdown() {
+  server.close(() => stopQueue());
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

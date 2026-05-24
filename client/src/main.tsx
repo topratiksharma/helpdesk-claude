@@ -1,5 +1,8 @@
+import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import { StrictMode } from 'react'
+
+axios.defaults.baseURL = import.meta.env.VITE_API_URL ?? ''
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

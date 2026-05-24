@@ -2,12 +2,12 @@
   "name": "@helpdesk/server",
   "version": "1.0.0",
   "scripts": {
-    "postinstall": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate",
-    "dev": "~/.bun/bin/bun --env-file src/.env --watch src/index.ts",
-    "start": "~/.bun/bin/bun --env-file src/.env src/index.ts",
-    "db:migrate": "~/.bun/bin/bun run node_modules/prisma/build/index.js migrate dev",
-    "db:generate": "~/.bun/bin/bun run node_modules/prisma/build/index.js generate",
-    "db:seed": "~/.bun/bin/bun --env-file src/.env src/seed.ts"
+    "postinstall": "bunx prisma generate",
+    "dev": "bun --env-file src/.env --watch src/index.ts",
+    "start": "bun --env-file src/.env src/index.ts",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:generate": "bunx prisma generate",
+    "db:seed": "bun --env-file src/.env src/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.64",
@@ -21,6 +21,7 @@
     "@types/cors": "^2.8.19",
     "ai": "^6.0.185",
     "better-auth": "^1.6.9",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.1.0",
@@ -33,6 +34,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/express": "^5.0.0",
     "@types/multer": "^2.1.0",
     "typescript": "^5.7.2"
