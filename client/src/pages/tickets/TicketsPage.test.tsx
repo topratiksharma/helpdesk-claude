@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { screen, waitFor, act, within, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import TicketsPage from './TicketsPage'
 import { renderWithProviders } from '@/test/utils'
@@ -127,4 +128,124 @@ describe('TicketsPage — error state', () => {
     renderWithProviders(<TicketsPage />)
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not load tickets/i)
   })
+})
+
+// ─── Query params — defaults ───────────────────────────────────────────────────
+
+describe('TicketsPage — default query params', () => {
+  beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({ data: mockResponse })
+  })
+
+  it('does not include "search" param in the default query call', async () => {
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+    const callParams = mockedAxios.get.mock.calls[0][1]?.params ?? {}
+    expect(callParams).not.toHaveProperty('search')
+  })
+
+  it('does not include "status" param in the default query call', async () => {
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+    const callParams = mockedAxios.get.mock.calls[0][1]?.params ?? {}
+    expect(callParams).not.toHaveProperty('status')
+  })
+
+  it('does not include "category" param in the default query call', async () => {
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+    const callParams = mockedAxios.get.mock.calls[0][1]?.params ?? {}
+    expect(callParams).not.toHaveProperty('category')
+  })
+
+  it('includes "page" param in the default query call', async () => {
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+    const callParams = mockedAxios.get.mock.calls[0][1]?.params ?? {}
+    expect(callParams).toHaveProperty('page', 1)
+  })
+})
+
+// ─── Filter interaction → query params ───────────────────────────────────────
+
+describe('TicketsPage — status filter interaction', () => {
+  beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({ data: mockResponse })
+  })
+
+  it('passes status="open" param to axios.get after clicking Open filter', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+
+    await user.click(screen.getByRole('button', { name: 'Open' }))
+
+    await waitFor(() => {
+      const calls = mockedAxios.get.mock.calls
+      const lastCallParams = calls[calls.length - 1][1]?.params ?? {}
+      expect(lastCallParams).toHaveProperty('status', 'open')
+    })
+  })
+
+  it('resets to page 1 when a status filter is applied', async () => {
+    const user = userEvent.setup()
+    // Use a large total so the pagination control renders
+    mockedAxios.get.mockResolvedValue({
+      data: { ...mockResponse, total: 100 },
+    })
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+
+    // Navigate to page 2 by clicking the page 2 anchor in the nav
+    // PaginationControl renders <a> elements without href, so query by text within nav
+    const nav = screen.getByRole('navigation')
+    const page2Anchor = within(nav).getByText('2')
+    await user.click(page2Anchor)
+
+    await waitFor(() => {
+      const calls = mockedAxios.get.mock.calls
+      const lastParams = calls[calls.length - 1][1]?.params ?? {}
+      expect(lastParams).toHaveProperty('page', 2)
+    })
+
+    // Now click a status filter — page should reset to 1
+    await user.click(screen.getByRole('button', { name: 'Resolved' }))
+
+    await waitFor(() => {
+      const calls = mockedAxios.get.mock.calls
+      const lastParams = calls[calls.length - 1][1]?.params ?? {}
+      expect(lastParams).toHaveProperty('page', 1)
+    })
+  })
+})
+
+// ─── Search filter interaction → query params ─────────────────────────────────
+//
+// Search has a 400ms debounce. We wait for the debounce to fire with real
+// timers using a generous waitFor timeout.
+
+describe('TicketsPage — search filter interaction', () => {
+  beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({ data: mockResponse })
+  })
+
+  it('passes search param to axios.get after debounce fires', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TicketsPage />)
+    await screen.findByText('Cannot access my account')
+
+    // Type in the search box
+    await user.type(screen.getByPlaceholderText('Search tickets…'), 'billing')
+
+    // The 400ms debounce fires naturally; waitFor polls until axios.get is called
+    // with the search param (use a 2s timeout to comfortably exceed the 400ms debounce)
+    await waitFor(
+      () => {
+        const calls = mockedAxios.get.mock.calls
+        const lastParams = calls[calls.length - 1][1]?.params ?? {}
+        expect(lastParams).toHaveProperty('search', 'billing')
+      },
+      { timeout: 2000 },
+    )
+  }, 8000)
 })
